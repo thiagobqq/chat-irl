@@ -9,6 +9,7 @@ namespace src.infra.Data
     {
         public DbSet<Group> Groups { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<GroupMessage> GroupMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,6 +34,21 @@ namespace src.infra.Data
 
             modelBuilder.Entity<ChatMessage>()
                 .HasIndex(m => new { m.SenderId, m.ReceiverId });
+
+            modelBuilder.Entity<GroupMessage>()
+                .HasOne(m => m.Group)
+                .WithMany()
+                .HasForeignKey(m => m.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GroupMessage>()
+                .HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GroupMessage>()
+                .HasIndex(m => m.GroupId);
         }
     }
 }

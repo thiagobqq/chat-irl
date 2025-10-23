@@ -81,7 +81,7 @@
             color: #333;
         }
 
-        .user-item, .conversation-item {
+        .user-item, .conversation-item, .group-item {
             padding: 12px;
             margin-bottom: 10px;
             background: #f5f5f5;
@@ -90,11 +90,15 @@
             transition: background 0.2s;
         }
 
-        .user-item:hover, .conversation-item:hover {
+        .group-item {
+            border-left: 3px solid #0084ff;
+        }
+
+        .user-item:hover, .conversation-item:hover, .group-item:hover {
             background: #e8e8e8;
         }
 
-        .user-item.active, .conversation-item.active {
+        .user-item.active, .conversation-item.active, .group-item.active {
             background: #0084ff;
             color: white;
         }
@@ -182,6 +186,13 @@
             margin-top: 4px;
         }
 
+        .message-sender {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 3px;
+            font-weight: bold;
+        }
+
         .message-input-area {
             display: flex;
             gap: 10px;
@@ -234,7 +245,7 @@
             cursor: pointer;
         }
 
-        .unread-badge {
+        .unread-badge, .member-count {
             background: #ff4444;
             color: white;
             padding: 2px 8px;
@@ -242,9 +253,59 @@
             font-size: 11px;
             float: right;
         }
+
+        .member-count {
+            background: #666;
+        }
+
+        .create-group-btn {
+            width: 100%;
+            padding: 8px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .create-group-btn:hover {
+            background: #218838;
+        }
+
+        /* Modal */
+        #createGroupModal {
+            display: none;
+        }
+
+        #createGroupModal.show {
+            display: flex !important;
+        }
+
+        .user-checkbox-item {
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-checkbox-item:hover {
+            background: #f5f5f5;
+        }
+
+        .user-checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .user-checkbox-item label {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+    <!-- Tela de Login -->
     <div class="login-container" id="loginContainer">
         <h2>Login - Chat</h2>
         <input type="text" id="loginEmail" placeholder="Email" value="">
@@ -253,19 +314,31 @@
         <div class="error" id="loginError"></div>
     </div>
 
+    <!-- Tela do Chat -->
     <div class="container">
         <div class="chat-container" id="chatContainer">
+            <!-- Sidebar -->
             <div class="sidebar">
-                <h3>Conversas</h3>
+                <!-- Grupos -->
+                <h3>📁 Grupos</h3>
+                <button class="create-group-btn" onclick="openCreateGroupModal()">+ Criar Grupo</button>
+                <div id="groupsList"></div>
+                
+                <!-- Conversas -->
+                <h3 style="margin-top: 20px;">💬 Conversas</h3>
                 <div id="conversationsList"></div>
-                <h3 style="margin-top: 20px;">Usuários</h3>
+                
+                <!-- Usuários -->
+                <h3 style="margin-top: 20px;">👥 Usuários</h3>
                 <div id="usersList"></div>
+                
                 <button class="logout-btn" onclick="logout()">Sair</button>
             </div>
 
+            <!-- Área do Chat -->
             <div class="chat-area">
                 <div class="no-chat-selected" id="noChatSelected">
-                    Selecione um usuário para começar a conversar
+                    Selecione um usuário ou grupo para começar a conversar
                 </div>
                 <div id="chatContent" style="display: none; flex-direction: column; height: 100%;">
                     <div class="chat-header">
@@ -286,14 +359,42 @@
         </div>
     </div>
 
+    <!-- Modal Criar Grupo -->
+    <div id="createGroupModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <h2 style="margin-bottom: 20px;">📁 Criar Novo Grupo</h2>
+            
+            <input type="text" id="groupName" placeholder="Nome do grupo" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+            
+            <textarea id="groupDescription" placeholder="Descrição (opcional)" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; min-height: 60px; resize: vertical;"></textarea>
+            
+            <h4 style="margin-bottom: 10px;">Selecionar Membros:</h4>
+            <div id="userSelectionList" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 15px;">
+                <!-- Lista de usuários será inserida aqui -->
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="submitCreateGroup()" style="flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">Criar Grupo</button>
+                <button onclick="closeCreateGroupModal()" style="flex: 1; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">Cancelar</button>
+            </div>
+            
+            <div id="groupError" style="color: red; font-size: 12px; margin-top: 10px;"></div>
+        </div>
+    </div>
+
     <script>
+        // ==================== VARIÁVEIS GLOBAIS ====================
         let connection = null;
         let token = null;
         let currentUserId = null;
         let currentReceiverId = null;
         let currentReceiverUsername = null;
+        let currentGroupId = null;
+        let currentGroupName = null;
         let typingTimer = null;
+        let allUsers = [];
 
+        // ==================== LOGIN ====================
         async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
@@ -318,6 +419,7 @@
                     await connectToChat();
                     loadUsers();
                     loadConversations();
+                    loadGroups();
                 } else {
                     errorDiv.textContent = data.message || 'Erro ao fazer login';
                 }
@@ -331,11 +433,14 @@
             if (connection) connection.stop();
             token = null;
             currentUserId = null;
+            currentReceiverId = null;
+            currentGroupId = null;
             document.getElementById('loginContainer').style.display = 'block';
             document.getElementById('chatContainer').style.display = 'none';
             document.getElementById('messages').innerHTML = '';
         }
 
+        // ==================== SIGNALR CONNECTION ====================
         async function connectToChat() {
             connection = new signalR.HubConnectionBuilder()
                 .withUrl('/chathub', {
@@ -344,9 +449,10 @@
                 .withAutomaticReconnect()
                 .build();
 
+            // Eventos de Chat Direto
             connection.on('ReceiveMessage', (message) => {
-                displayMessage(message, false);
-                if (message.senderId === currentReceiverId) {
+                if (currentReceiverId && message.senderId === currentReceiverId) {
+                    displayMessage(message, false);
                     connection.invoke('MarkMessagesAsRead', message.senderId);
                 }
             });
@@ -355,20 +461,41 @@
                 displayMessage(message, true);
             });
 
+            // Eventos de Grupo
+            connection.on('ReceiveGroupMessage', (message) => {
+                if (currentGroupId && message.groupId === currentGroupId) {
+                    displayGroupMessage(message);
+                }
+            });
+
+            connection.on('UserJoinedGroup', (userId, groupId) => {
+                if (currentGroupId === groupId) {
+                    console.log(`Usuário ${userId} entrou no grupo`);
+                }
+            });
+
+            connection.on('UserLeftGroup', (userId, groupId) => {
+                if (currentGroupId === groupId) {
+                    console.log(`Usuário ${userId} saiu do grupo`);
+                }
+            });
+
+            // Eventos de Status
             connection.on('UserConnected', (userId) => updateUserStatus(userId, true));
             connection.on('UserDisconnected', (userId) => updateUserStatus(userId, false));
             connection.on('OnlineUsers', (users) => {
                 users.forEach(userId => updateUserStatus(userId, true));
             });
 
+            // Eventos de Digitação
             connection.on('UserTyping', (userId) => {
-                if (userId === currentReceiverId) {
+                if (userId === currentReceiverId && !currentGroupId) {
                     document.getElementById('typingIndicator').style.display = 'block';
                 }
             });
 
             connection.on('UserStoppedTyping', (userId) => {
-                if (userId === currentReceiverId) {
+                if (userId === currentReceiverId && !currentGroupId) {
                     document.getElementById('typingIndicator').style.display = 'none';
                 }
             });
@@ -377,13 +504,190 @@
 
             try {
                 await connection.start();
-                console.log('Conectado ao SignalR');
+                console.log('✅ Conectado ao SignalR');
             } catch (err) {
-                console.error('Erro ao conectar:', err);
+                console.error('❌ Erro ao conectar:', err);
                 setTimeout(connectToChat, 5000);
             }
         }
 
+        // ==================== FUNÇÕES DE GRUPO ====================
+        function openCreateGroupModal() {
+            document.getElementById('createGroupModal').classList.add('show');
+            loadUsersForSelection();
+        }
+
+        function closeCreateGroupModal() {
+            document.getElementById('createGroupModal').classList.remove('show');
+            document.getElementById('groupName').value = '';
+            document.getElementById('groupDescription').value = '';
+            document.getElementById('groupError').textContent = '';
+        }
+
+        async function loadUsersForSelection() {
+            try {
+                const response = await fetch('/api/chat/users', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                allUsers = await response.json();
+                
+                const userSelectionList = document.getElementById('userSelectionList');
+                userSelectionList.innerHTML = allUsers.map(user => `
+                    <div class="user-checkbox-item">
+                        <input type="checkbox" id="user-check-${user.id}" value="${user.id}">
+                        <label for="user-check-${user.id}">
+                            <strong>${escapeHtml(user.userName)}</strong>
+                            <br>
+                            <small style="color: #666;">${escapeHtml(user.email)}</small>
+                        </label>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+            }
+        }
+
+        async function submitCreateGroup() {
+            const groupName = document.getElementById('groupName').value.trim();
+            const groupDescription = document.getElementById('groupDescription').value.trim();
+            const groupError = document.getElementById('groupError');
+            
+            if (!groupName) {
+                groupError.textContent = 'Digite um nome para o grupo';
+                return;
+            }
+            
+            const selectedUsers = [];
+            allUsers.forEach(user => {
+                const checkbox = document.getElementById(`user-check-${user.id}`);
+                if (checkbox && checkbox.checked) {
+                    selectedUsers.push(user.id);
+                }
+            });
+            
+            if (selectedUsers.length === 0) {
+                groupError.textContent = 'Selecione pelo menos um membro';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/group', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: groupName,
+                        description: groupDescription,
+                        users: selectedUsers
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    closeCreateGroupModal();
+                    loadGroups();
+                    alert('✅ Grupo criado com sucesso!');
+                } else {
+                    groupError.textContent = data.error || data.message || 'Erro ao criar grupo';
+                }
+            } catch (error) {
+                console.error('Erro ao criar grupo:', error);
+                groupError.textContent = 'Erro ao conectar com o servidor';
+            }
+        }
+
+        async function loadGroups() {
+            try {
+                const response = await fetch('/api/group/meus-grupos', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const groups = await response.json();
+                displayGroups(groups);
+            } catch (error) {
+                console.error('Erro ao carregar grupos:', error);
+            }
+        }
+
+        function displayGroups(groups) {
+            const groupsList = document.getElementById('groupsList');
+            groupsList.innerHTML = groups.map(group => `
+                <div class="group-item" onclick="selectGroup(${group.id}, '${escapeHtml(group.name)}')" id="group-${group.id}">
+                    <strong>📁 ${escapeHtml(group.nome)}</strong>
+                    <span class="member-count">${group.users?.length || 0} membros</span>
+                    <br>
+                    <small>${escapeHtml(group.description || 'Sem descrição')}</small>
+                </div>
+            `).join('');
+        }
+
+        async function selectGroup(groupId, groupName) {
+            if (currentGroupId && currentGroupId !== groupId) {
+                await connection.invoke('LeaveGroup', currentGroupId);
+            }
+
+            currentReceiverId = null;
+            currentReceiverUsername = null;
+            currentGroupId = groupId;
+            currentGroupName = groupName;
+
+            await connection.invoke('JoinGroup', groupId);
+
+            document.querySelectorAll('.user-item, .conversation-item, .group-item').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            const groupElement = document.getElementById('group-' + groupId);
+            if (groupElement) groupElement.classList.add('active');
+
+            document.getElementById('noChatSelected').style.display = 'none';
+            document.getElementById('chatContent').style.display = 'flex';
+            document.getElementById('chatUsername').textContent = `📁 ${groupName}`;
+            document.getElementById('typingIndicator').style.display = 'none';
+
+            await loadGroupMessages(groupId);
+        }
+
+        async function loadGroupMessages(groupId) {
+            try {
+                const response = await fetch(`/api/group/${groupId}/messages`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const messages = await response.json();
+                
+                document.getElementById('messages').innerHTML = '';
+                messages.forEach(msg => {
+                    displayGroupMessage(msg);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar mensagens do grupo:', error);
+            }
+        }
+
+        function displayGroupMessage(message) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            
+            const isSent = message.senderId === currentUserId;
+            messageDiv.className = 'message ' + (isSent ? 'sent' : 'received');
+            
+            const time = new Date(message.sentAt).toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', minute: '2-digit' 
+            });
+
+            messageDiv.innerHTML = `
+                ${!isSent ? `<div class="message-sender">${escapeHtml(message.senderUsername)}</div>` : ''}
+                <div class="message-content">${escapeHtml(message.message)}</div>
+                <div class="message-info">${time}</div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // ==================== FUNÇÕES DE CHAT DIRETO ====================
         async function loadUsers() {
             try {
                 const response = await fetch('/api/chat/users', {
@@ -431,10 +735,10 @@
         function displayUsers(users) {
             const usersList = document.getElementById('usersList');
             usersList.innerHTML = users.map(user => `
-                <div class="user-item" onclick="selectUser('${user.id}', '${user.userName}')" id="user-${user.id}">
+                <div class="user-item" onclick="selectUser('${user.id}', '${escapeHtml(user.userName)}')" id="user-${user.id}">
                     <span class="status ${user.isOnline ? 'online' : ''}" id="status-${user.id}"></span>
-                    <strong>${user.userName}</strong><br>
-                    <small>${user.email}</small>
+                    <strong>${escapeHtml(user.userName)}</strong><br>
+                    <small>${escapeHtml(user.email)}</small>
                 </div>
             `).join('');
         }
@@ -442,10 +746,10 @@
         function displayConversations(conversations) {
             const conversationsList = document.getElementById('conversationsList');
             conversationsList.innerHTML = conversations.map(conv => `
-                <div class="conversation-item" onclick="selectUser('${conv.userId}', '${conv.username}')">
-                    <strong>${conv.username}</strong>
+                <div class="conversation-item" onclick="selectUser('${conv.userId}', '${escapeHtml(conv.username)}')">
+                    <strong>${escapeHtml(conv.username)}</strong>
                     ${conv.unreadCount > 0 ? '<span class="unread-badge">' + conv.unreadCount + '</span>' : ''}
-                    <br><small>${conv.lastMessage ? conv.lastMessage.substring(0, 30) + '...' : 'Sem mensagens'}</small>
+                    <br><small>${conv.lastMessage ? escapeHtml(conv.lastMessage.substring(0, 30)) + '...' : 'Sem mensagens'}</small>
                 </div>
             `).join('');
         }
@@ -468,11 +772,17 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        function selectUser(userId, username) {
+        async function selectUser(userId, username) {
+            if (currentGroupId) {
+                await connection.invoke('LeaveGroup', currentGroupId);
+                currentGroupId = null;
+                currentGroupName = null;
+            }
+
             currentReceiverId = userId;
             currentReceiverUsername = username;
 
-            document.querySelectorAll('.user-item, .conversation-item').forEach(el => {
+            document.querySelectorAll('.user-item, .conversation-item, .group-item').forEach(el => {
                 el.classList.remove('active');
             });
 
@@ -498,17 +808,23 @@
             }
         }
 
+        // ==================== ENVIAR MENSAGEM ====================
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
 
-            if (!message || !currentReceiverId) return;
+            if (!message) return;
 
             try {
-                await connection.invoke('SendMessageToUser', {
-                    receiverId: currentReceiverId,
-                    message: message
-                });
+                if (currentGroupId) {
+                    await connection.invoke('SendMessageToGroup', currentGroupId, message);
+                } else if (currentReceiverId) {
+                    await connection.invoke('SendMessageToUser', {
+                        receiverId: currentReceiverId,
+                        message: message
+                    });
+                }
+                
                 input.value = '';
             } catch (error) {
                 console.error('Erro ao enviar mensagem:', error);
@@ -522,7 +838,7 @@
                 return;
             }
 
-            if (currentReceiverId && connection) {
+            if (currentReceiverId && connection && !currentGroupId) {
                 clearTimeout(typingTimer);
                 connection.invoke('StartTyping', currentReceiverId);
                 
@@ -533,6 +849,7 @@
         }
 
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;

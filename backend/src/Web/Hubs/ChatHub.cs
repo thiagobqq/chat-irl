@@ -1,23 +1,30 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using src.Core.Interfaces;
 using src.Core.Models;
 using src.Impl.Dtos;
-using src.infra.Data;
 using System.Security.Claims;
 
-namespace src.Web.hub
+namespace src.web.Hubs
 {
     [Authorize]
     public class ChatHub : Hub
     {
         private readonly IChatService _chatService;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly IGroupService _groupService;
+        
+        private static readonly Dictionary<string, HashSet<int>> _connectionGroups = new();
 
-        public ChatHub(IChatService chatService)
+        public ChatHub(
+            IChatService chatService, 
+            UserManager<AppUser> userManager,
+            IGroupService groupService)
         {
             _chatService = chatService;
+            _userManager = userManager;
+            _groupService = groupService;
         }
 
         public override async Task OnConnectedAsync()
@@ -27,6 +34,7 @@ namespace src.Web.hub
             if (!string.IsNullOrEmpty(userId))
             {
                 _chatService.AddUserConnection(userId, Context.ConnectionId);
+                _connectionGroups[Context.ConnectionId] = new HashSet<int>();
                 
                 await Clients.Others.SendAsync("UserConnected", userId);
                 
@@ -43,6 +51,17 @@ namespace src.Web.hub
             
             if (!string.IsNullOrEmpty(userId))
             {
+                if (_connectionGroups.TryGetValue(Context.ConnectionId, out var userGroups))
+                {
+                    foreach (var groupId in userGroups.ToList())
+                    {
+                        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"group_{groupId}");
+                        await Clients.Group($"group_{groupId}").SendAsync("UserLeftGroup", userId, groupId);
+                    }
+                    
+                    _connectionGroups.Remove(Context.ConnectionId);
+                }
+                
                 _chatService.RemoveUserConnection(userId);
                 await Clients.Others.SendAsync("UserDisconnected", userId);
             }
@@ -55,17 +74,23 @@ namespace src.Web.hub
             try
             {
                 var senderId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var senderUsername = Context.User!.Identity!.Name!;
-
+                
                 if (string.IsNullOrEmpty(senderId))
                 {
                     await Clients.Caller.SendAsync("Error", "Usuário não autenticado");
                     return;
                 }
 
+                var sender = await _userManager.FindByIdAsync(senderId);
+                if (sender == null)
+                {
+                    await Clients.Caller.SendAsync("Error", "Usuário não encontrado");
+                    return;
+                }
+
                 var message = await _chatService.SendMessageAsync(
                     senderId, 
-                    senderUsername, 
+                    sender.UserName!, 
                     dto.ReceiverId, 
                     dto.Message
                 );
@@ -129,10 +154,88 @@ namespace src.Web.hub
         {
             var senderId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var connectionId = _chatService.GetUserConnection(receiverId);
-            
+
             if (!string.IsNullOrEmpty(connectionId))
             {
                 await Clients.Client(connectionId).SendAsync("UserStoppedTyping", senderId);
+            }
+        }
+        
+        public async Task JoinGroup(int groupId)
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userId))
+                return;
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"group_{groupId}");
+            
+            if (!_connectionGroups.ContainsKey(Context.ConnectionId))
+            {
+                _connectionGroups[Context.ConnectionId] = new HashSet<int>();
+            }
+            _connectionGroups[Context.ConnectionId].Add(groupId);
+            
+            await Clients.Group($"group_{groupId}").SendAsync("UserJoinedGroup", userId, groupId);
+        }
+
+        public async Task LeaveGroup(int groupId)
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userId))
+                return;
+
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"group_{groupId}");
+            
+            if (_connectionGroups.TryGetValue(Context.ConnectionId, out var userGroups))
+            {
+                userGroups.Remove(groupId);
+            }
+            
+            await Clients.Group($"group_{groupId}").SendAsync("UserLeftGroup", userId, groupId);
+        }
+
+        public async Task SendMessageToGroup(int groupId, string message)
+        {
+            try
+            {
+                var senderId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                
+                if (string.IsNullOrEmpty(senderId))
+                {
+                    await Clients.Caller.SendAsync("Error", "Usuário não autenticado");
+                    return;
+                }
+
+                var sender = await _userManager.FindByIdAsync(senderId);
+                if (sender == null)
+                {
+                    await Clients.Caller.SendAsync("Error", "Usuário não encontrado");
+                    return;
+                }
+
+                var groupMessage = await _groupService.SendMessageAsync(
+                    groupId, 
+                    senderId, 
+                    message
+                );
+
+                var messageDto = new GroupMessageDto
+                {
+                    Id = groupMessage.Id,
+                    GroupId = groupMessage.GroupId,
+                    SenderId = groupMessage.SenderId,
+                    SenderUsername = groupMessage.SenderUsername,
+                    Message = groupMessage.Message,
+                    SentAt = groupMessage.SentAt
+                };
+
+                await Clients.Group($"group_{groupId}").SendAsync("ReceiveGroupMessage", messageDto);
+            }
+            catch (Exception ex)
+            {
+                await Clients.Caller.SendAsync("Error", ex.Message);
             }
         }
     }

@@ -9,7 +9,8 @@ using src.Core.Models;
 using src.Impl.Service;
 using src.infra.Data;
 using src.infra.Repository;
-using src.Web.hub;
+using src.web.Hubs;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -105,7 +106,11 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
+
 builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+builder.Services.AddScoped<IGroupRepository, GroupRepository>();
+builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 
 builder.Services.AddSignalR();
 
