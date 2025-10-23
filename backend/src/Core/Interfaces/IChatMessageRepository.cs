@@ -15,7 +15,7 @@ namespace src.Core.Interfaces
         Task<List<ChatMessage>> GetUnreadMessagesAsync(string senderId, string receiverId);
         Task MarkMessagesAsReadAsync(string senderId, string receiverId);
         Task<int> GetUnreadCountAsync(string userId);
-        Task<ChatMessage> GetMessageByIdAsync(int messageId);
+        Task<ChatMessage?> GetMessageByIdAsync(int messageId);
         Task<List<UserChatDto>> GetAvailableUsersAsync(string currentUserId);
     }
 }

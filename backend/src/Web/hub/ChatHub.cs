@@ -37,7 +37,7 @@ namespace src.Web.hub
             await base.OnConnectedAsync();
         }
 
-        public override async Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
@@ -55,7 +55,7 @@ namespace src.Web.hub
             try
             {
                 var senderId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var senderUsername = Context.User?.Identity?.Name;
+                var senderUsername = Context.User!.Identity!.Name!;
 
                 if (string.IsNullOrEmpty(senderId))
                 {

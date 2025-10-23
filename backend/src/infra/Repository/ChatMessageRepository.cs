@@ -110,7 +110,7 @@ namespace src.infra.Repository
                 .CountAsync(m => m.ReceiverId == userId && !m.IsRead);
         }
 
-        public async Task<ChatMessage> GetMessageByIdAsync(int messageId)
+        public async Task<ChatMessage?> GetMessageByIdAsync(int messageId)
         {
             return await _context.ChatMessages.FindAsync(messageId);
         }

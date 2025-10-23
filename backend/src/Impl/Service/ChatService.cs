@@ -87,7 +87,7 @@ namespace src.Impl.Service
 
         public string GetUserConnection(string userId)
         {
-            return _userConnections.TryGetValue(userId, out var connectionId) ? connectionId : null;
+            return _userConnections.TryGetValue(userId, out var connectionId) ? connectionId : "";
         }
 
         public List<string> GetOnlineUsers()
