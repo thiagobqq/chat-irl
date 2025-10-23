@@ -1,0 +1,53 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+.vs/
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+.env.production
+appsettings.Development.json
+secrets.json
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+*.mdf
+*.ldf
+*.bak
+
+# Docker
+docker-compose.override.yml
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+[Ll]ogs/
+
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
