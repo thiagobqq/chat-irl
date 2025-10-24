@@ -66,7 +66,7 @@ namespace src.Web.Controllers
                 if (!ModelState.IsValid)
                     throw new Exception("Invalid payload");
 
-                var response = _authService.Register(_userManager, _signinManager, request).Result;
+                var response = await _authService.Register(_userManager, _signinManager, request);
                 if (response == null)
                     throw new Exception("Failed to create user");
 
@@ -87,14 +87,14 @@ namespace src.Web.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] AuthDTO request)
+        public async Task<IActionResult> Login([FromBody] AuthDTO request)
         {
             try
             {
                 if (!ModelState.IsValid)
                     throw new Exception("Invalid payload");
 
-                var response = _authService.Login(_userManager, _signinManager, request).Result;
+                var response = await _authService.Login(_userManager, _signinManager, request);
                 if (response != null)
                 {
                     return Ok(response);
