@@ -28,7 +28,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        var origin = Environment.GetEnvironmentVariable("FRONTEND_URL");
+        // var origin = Environment.GetEnvironmentVariable("FRONTEND_URL");
+        var origin = "http://localhost:5173";
         if (!string.IsNullOrWhiteSpace(origin))
         {
             policy
@@ -124,8 +125,10 @@ if (app.Environment.IsDevelopment() || true )
 
 //tirar dps
 app.UseDefaultFiles();  
-app.UseStaticFiles();   
+app.UseStaticFiles();
 
+app.UseRouting();
+app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
@@ -134,7 +137,6 @@ app.UseAuthorization();
 
 app.MapHub<ChatHub>("/chathub");
 
-app.UseCors("AllowFrontend");
 
 app.MapControllers();
 

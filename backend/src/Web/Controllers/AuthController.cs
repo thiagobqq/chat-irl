@@ -55,8 +55,10 @@ namespace src.Web.Controllers
             var a = await _userManager.ResetPasswordAsync(user, decodedToken, request.Password!);
 
             return Ok(a);
-            
+
         }
+        
+        
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto request)
@@ -75,7 +77,8 @@ namespace src.Web.Controllers
                 {
                     Email = response.Email,
                     Name = response.Name,
-                    Token = response.Token
+                    Token = response.Token,
+                    Id = response.Id
                 });
 
             }
@@ -99,7 +102,7 @@ namespace src.Web.Controllers
                 {
                     return Ok(response);
                 }
-                return BadRequest();
+                return BadRequest("Credenciais erradas");
 
             }
             catch (Exception ex)

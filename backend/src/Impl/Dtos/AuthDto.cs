@@ -29,6 +29,7 @@ namespace src.Application.Dtos
     {
         public string? Email { get; set; }
         public string? Name { get; set; }
+        public string? Id {get; set; }
         public string? Token { get; set; }
     }
 
@@ -49,6 +50,10 @@ namespace src.Application.Dtos
         public string? Token { get; set; }
         public string? email { get; set; }
         public string? username { get; set; }
+
+        public string? Id { get; set; }
+
+        
     }
     public class ForgotPasswordDTO
     {

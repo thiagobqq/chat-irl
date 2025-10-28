@@ -40,7 +40,8 @@ namespace src.Impl.Service
             {
                 email = user!.Email,
                 username = user.UserName,
-                Token = await _tokenService.createToken(user)
+                Token = await _tokenService.createToken(user),
+                Id = user.Id
             };
         }
 
