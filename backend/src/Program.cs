@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using src.Core.Interfaces;
 using src.Core.Models;
 using src.Impl.Service;
@@ -15,7 +16,29 @@ using src.web.Hubs;
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddSwaggerGen(); 
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Chat IRL API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Use: 'Bearer {token}'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            new string[] {}
+        }
+    });
+});
 
 
 builder.Services.AddControllers()
@@ -112,6 +135,7 @@ builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddSignalR();
 
