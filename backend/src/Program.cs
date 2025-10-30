@@ -148,20 +148,20 @@ if (app.Environment.IsDevelopment() || true )
 }
 
 //tirar dps
-app.UseDefaultFiles();  
+app.UseDefaultFiles();
 app.UseStaticFiles();
+
+
+app.UseHttpsRedirection();
 
 app.UseRouting();
 app.UseCors("AllowFrontend");
 
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
 
 app.MapHub<ChatHub>("/chathub");
-
-
 app.MapControllers();
 
 

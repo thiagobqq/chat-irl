@@ -1,10 +1,15 @@
-export type Status = "available" | "busy" | "away" | "offline";
+export type UserStatusNumber = 0 | 1 | 2 | 3;
+export type Status = 'Available' | 'Busy' | 'Away' | 'Offline';
 
 export interface User {
   id: string;
   userName: string;
   email: string;
   isOnline?: boolean;
+  status?: UserStatusNumber; // Backend envia como número
+  description?: string;
+  profilePicture?: string;
+  backgroundPicture?: string;
 }
 
 export interface Contact {
@@ -31,8 +36,11 @@ export interface Message {
 export interface Conversation {
   userId: string;
   username: string;
+  email: string;
   lastMessage: string;
+  lastMessageDate: Date | string | null;
   unreadCount: number;
+  isOnline: boolean;
 }
 
 export interface Group {

@@ -16,7 +16,7 @@ interface UserDTO {
   profilePicture: string;
   backgroundPicture: string;
   description: string;
-  status: 'Available' | 'Busy' | 'Away' | 'Offline';
+  status: number;
 }
 
 class ApiService {
@@ -100,11 +100,11 @@ class ApiService {
     return data;
   }
 
-  async register(userName: string, email: string, password: string) {
+  async register(name: string, email: string, password: string) {
     const response = await fetch(`${this.baseUrl}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userName, email, password }),
+      body: JSON.stringify({ name, email, password }),
     });
 
     if (!response.ok) {
@@ -130,11 +130,41 @@ class ApiService {
   }
 
   async updateUserProfile(userDto: UserDTO): Promise<void> {
-    await this.fetchWithAuth('/user/update', {
-      method: 'PUT',
-      body: JSON.stringify(userDto)
-    });
+  const token = this.getToken();
+  
+  if (!token) {
+    throw new Error('Você precisa estar logado para atualizar o perfil');
   }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+
+  const response = await fetch(`${this.baseUrl}/api/user/update`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(userDto)
+  });
+
+  if (!response.ok) {
+    const contentType = response.headers.get('content-type');
+    let errorMessage = `Erro: ${response.status}`;
+    
+    if (contentType && contentType.includes('application/json')) {
+      const error = await response.json().catch(() => ({}));
+      errorMessage = error.message || error.title || errorMessage;
+    }
+    
+    throw new Error(errorMessage);
+  }
+
+  // Tenta fazer parse do JSON apenas se houver conteúdo
+  const text = await response.text();
+  if (text) {
+    JSON.parse(text);
+  }
+}
 
   async getUsers(): Promise<User[]> {
     const data = await this.fetchWithAuth('/chat/users');

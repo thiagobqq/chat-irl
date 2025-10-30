@@ -1,24 +1,24 @@
 type Status = "available" | "busy" | "away" | "offline";
 
 interface StatusDotProps {
-  status: Status;
+  status: Status | string;
 }
 
 const statusColors = {
-  available: "bg-[#7FFF00]",
-  busy: "bg-[#FF4444]",
-  away: "bg-[#FFD700]",
-  offline: "bg-[#999999]",
+  available: "bg-green-500",
+  busy: "bg-red-500",
+  away: "bg-yellow-500",
+  offline: "bg-gray-400",
 };
 
 export function StatusDot({ status }: StatusDotProps) {
+  // Converte para lowercase e garante fallback
+  const normalizedStatus = (status?.toLowerCase() || 'offline') as Status;
+  const color = statusColors[normalizedStatus] || statusColors.offline;
+  
+  console.log('StatusDot:', { status, normalizedStatus, color }); // Debug
+  
   return (
-    <span className={`
-      w-3 h-3 
-      rounded-full 
-      border-2 border-white 
-      shadow-status
-      ${statusColors[status]}
-    `} />
+    <div className={`w-3 h-3 rounded-full ${color} border-2 border-white shadow-sm`} />
   );
 }

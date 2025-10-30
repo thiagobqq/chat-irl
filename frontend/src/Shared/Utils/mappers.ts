@@ -53,3 +53,78 @@ export function toCamelCase(obj: any): any {
   
   return obj;
 }
+
+
+export type UserStatusNumber = 0 | 1 | 2 | 3;
+export type UserStatusString = 'Available' | 'Busy' | 'Away' | 'Offline';
+export type StatusUI = 'available' | 'busy' | 'away' | 'offline';
+
+// Conversão de número para string (backend → app)
+export const statusToString: Record<UserStatusNumber, UserStatusString> = {
+  0: 'Available',
+  1: 'Busy',
+  2: 'Away',
+  3: 'Offline',
+};
+
+// Conversão de string para número (app → backend)
+export const statusToNumber: Record<UserStatusString, UserStatusNumber> = {
+  'Available': 0,
+  'Busy': 1,
+  'Away': 2,
+  'Offline': 3,
+};
+
+// Conversão de string para UI (app → componentes)
+export const statusToUI: Record<UserStatusString, StatusUI> = {
+  'Available': 'available',
+  'Busy': 'busy',
+  'Away': 'away',
+  'Offline': 'offline',
+};
+
+// Conversão de UI para string (componentes → app)
+export const uiToStatus: Record<StatusUI, UserStatusString> = {
+  'available': 'Available',
+  'busy': 'Busy',
+  'away': 'Away',
+  'offline': 'Offline',
+};
+
+/**
+ * Converte status numérico do backend para string
+ */
+export function convertStatusToString(status?: UserStatusNumber): UserStatusString {
+  if (status === undefined || status === null) return 'Available';
+  return statusToString[status] || 'Available';
+}
+
+/**
+ * Converte string para número (para enviar ao backend)
+ */
+export function convertStatusToNumber(status: UserStatusString): UserStatusNumber {
+  return statusToNumber[status];
+}
+
+/**
+ * Converte status para formato de UI (lowercase)
+ */
+export function convertToUI(status?: UserStatusString | UserStatusNumber): StatusUI {
+  if (status === undefined || status === null) return 'offline';
+  
+  // Se for número, converte para string primeiro
+  if (typeof status === 'number') {
+    const statusString = statusToString[status as UserStatusNumber];
+    return statusToUI[statusString] || 'offline';
+  }
+  
+  // Se for string, converte para UI
+  return statusToUI[status as UserStatusString] || 'offline';
+}
+
+/**
+ * Converte status de UI (lowercase) para string (uppercase)
+ */
+export function convertFromUI(status: StatusUI): UserStatusString {
+  return uiToStatus[status];
+}

@@ -6,16 +6,14 @@
   font-family: 'Segoe UI', Verdana, Arial, sans-serif;
 }
 
-html, body, #root {
+html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
 }
 
-.overflow-y-auto {
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
+#root {
+  height: 100%;
 }
 
 ::-webkit-scrollbar {

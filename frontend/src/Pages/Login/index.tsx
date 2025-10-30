@@ -36,7 +36,7 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#5EAEFF] via-[#B7E3FF] to-white relative overflow-hidden font-segoe flex items-center justify-center">
+    <div className="min-h-screen relative overflow-hidden font-segoe flex items-center justify-center">
       {/* Background animado */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] opacity-50">
@@ -47,15 +47,7 @@ export function Login() {
 
       {/* Card de Login */}
       <div className="relative z-10 w-full max-w-md mx-4">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl">
-            <MessageCircle className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-white [text-shadow:_2px_2px_4px_rgba(0,0,0,0.3)]">
-            RetroChat XP
-          </h1>
-        </div>
+        
 
         {/* Janela XP */}
         <div className="bg-white/95 rounded-t-lg shadow-xp-window overflow-hidden">
