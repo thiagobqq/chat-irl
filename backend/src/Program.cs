@@ -51,23 +51,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        // var origin = Environment.GetEnvironmentVariable("FRONTEND_URL");
-        var origin = "http://localhost:5173";
-        if (!string.IsNullOrWhiteSpace(origin))
-        {
-            policy
-                .WithOrigins(origin)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        }
-        else
-        {
-            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-        }
+        policy
+            .WithOrigins("http://localhost:80", "http://localhost","https://*.ngrok-free.app" )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
-
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -164,6 +154,21 @@ app.UseAuthorization();
 app.MapHub<ChatHub>("/chathub");
 app.MapControllers();
 
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        context.Database.Migrate(); // Aplica migrations automaticamente
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
 
 app.Run();
 

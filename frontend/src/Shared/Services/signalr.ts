@@ -2,7 +2,7 @@ import * as signalR from '@microsoft/signalr';
 import type { Message } from '../types/chat';
 import { normalizeMessage  } from '../Utils/mappers';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost';
 
 interface SignalRCallbacks {
   onReceiveMessage?: (message: Message) => void;
