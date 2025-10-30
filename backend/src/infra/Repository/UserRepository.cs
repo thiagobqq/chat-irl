@@ -19,15 +19,29 @@ namespace src.infra.Repository
             _context = context;
         }
 
-        public async Task<AppUser?> GetUserById(string userId)
+
+        public async Task<UserDTO?> GetUserById(string userId)
         {
-            return await _context.Users.FindAsync(userId);
+            var user = await _context.Users.FindAsync(userId);;
+            if (user == null)
+            {
+                return null;
+            }
+
+            return new UserDTO
+            {
+                Username = user.UserName!,
+                ProfilePicture = user.ProfilePicture,
+                BackgroundPicture = user.BackgroundPicture,
+                Description = user.Description,
+                Status = user.Status
+            };
         }
 
         public async Task<bool> UpdateUser(string userId, UserDTO dto)
         {
             var user = await _context.Users.FindAsync(userId);
-            
+
             if (user == null)
             {
                 return false;
@@ -45,10 +59,26 @@ namespace src.infra.Repository
             if (!string.IsNullOrEmpty(dto.Description))
                 user.Description = dto.Description;
 
-            user.Status = dto.Status; 
+            user.Status = dto.Status;
 
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<IEnumerable<UserDTO>> GetAllUsers()
+        {
+            return _context.Users.Select(user => new UserDTO
+            {
+                Username = user.UserName!,
+                ProfilePicture = user.ProfilePicture,
+                BackgroundPicture = user.BackgroundPicture,
+                Description = user.Description,
+                Status = user.Status
+            });
+        }
+
+
+        
+        
         
     }
 }

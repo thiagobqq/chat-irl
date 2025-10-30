@@ -11,6 +11,14 @@ interface LoginResponse {
   email: string;
 }
 
+interface UserDTO {
+  username: string;
+  profilePicture: string;
+  backgroundPicture: string;
+  description: string;
+  status: 'Available' | 'Busy' | 'Away' | 'Offline';
+}
+
 class ApiService {
   private token: string | null = null;
   private baseUrl: string;
@@ -108,6 +116,26 @@ class ApiService {
   }
 
   // ==================== USERS ====================
+  async getCurrentUser(): Promise<User> {
+    return this.fetchWithAuth('/user/me');
+  }
+
+  async getUserById(userId: string): Promise<User> {
+    return this.fetchWithAuth(`/user/${userId}`);
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    const data = await this.fetchWithAuth('/user/all');
+    return Array.isArray(data) ? data : [];
+  }
+
+  async updateUserProfile(userDto: UserDTO): Promise<void> {
+    await this.fetchWithAuth('/user/update', {
+      method: 'PUT',
+      body: JSON.stringify(userDto)
+    });
+  }
+
   async getUsers(): Promise<User[]> {
     const data = await this.fetchWithAuth('/chat/users');
     return Array.isArray(data) ? data : [];

@@ -10,5 +10,7 @@ namespace src.Core.Interfaces
     public interface IUserRepository
     {
         Task<bool> UpdateUser(string userId, UserDTO dto);
+        Task<UserDTO?> GetUserById(string userId);
+        Task<IEnumerable<UserDTO>> GetAllUsers();
     }
 }
