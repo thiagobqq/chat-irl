@@ -27,7 +27,7 @@ export function Home() {
       setLoading(true);
       const [conversationsData, usersData, currentUserData] = await Promise.all([
         apiService.getConversations(),
-        apiService.getAllUsers(),
+        apiService.getUsers(),
         apiService.getCurrentUser(),
       ]);
       
@@ -46,11 +46,17 @@ export function Home() {
   };
 
   const handleConversationClick = (conversation: Conversation) => {
-    navigate(`/chat/${conversation.userId}`);
+    console.log('🔵 Clicou na conversa:', conversation);
+    navigate('/chat', { 
+      state: { selectedUserId: conversation.userId } 
+    });
   };
 
   const handleUserClick = (user: User) => {
-    navigate(`/chat/${user.id}`);
+    console.log('🔵 Clicou no usuário:', user);
+    navigate('/chat', { 
+      state: { selectedUserId: user.id } 
+    });
   };
 
   const formatTime = (date?: Date | string | null) => {
@@ -109,7 +115,7 @@ export function Home() {
               : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
           }`}
         >
-          💬 Conversas {conversations.length > 0 && `(${conversations.length})`}
+          Conversas {conversations.length > 0 && `(${conversations.length})`}
         </button>
         <button
           onClick={() => setActiveTab('users')}
@@ -119,13 +125,13 @@ export function Home() {
               : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
           }`}
         >
-          👥 Usuários {users.length > 0 && `(${users.length})`}
+          Usuários {users.length > 0 && `(${users.length})`}
         </button>
       </div>
 
       {/* Conteúdo das tabs */}
       {activeTab === 'conversations' ? (
-        <XPWindow title="📫 Minhas Conversas">
+        <XPWindow title="Minhas Conversas">
           {!isAuthenticated ? (
             <div className="text-center py-12">
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
@@ -157,56 +163,129 @@ export function Home() {
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 p-3">
               {conversations.map((conversation) => (
                 <div
                   key={conversation.userId}
                   onClick={() => handleConversationClick(conversation)}
-                  className="flex items-center gap-4 p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer group"
+                  className="relative bg-gradient-to-b from-white to-[#F0F4FF] border-2 border-[#5C93C9] hover:border-[#0066CC] rounded cursor-pointer group transition-all hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_2px_4px_rgba(0,0,0,0.2)]"
+                  style={{
+                    boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.15)'
+                  }}
                 >
-                  {/* Avatar */}
-                  <div className="relative">
-                    <div className={`w-14 h-14 bg-gradient-to-br ${getGradient(conversation.username)} rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-110 transition-transform`}>
-                      {getInitials(conversation.username)}
+                  {/* Barra lateral colorida (estilo MSN) */}
+                  <div 
+                    className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${
+                      conversation.isOnline 
+                        ? 'from-[#7FBA00] to-[#5E8C00]' 
+                        : 'from-gray-400 to-gray-600'
+                    }`}
+                  ></div>
+
+                  <div className="flex items-center gap-3 p-3 pl-4">
+                    {/* Avatar com estilo MSN */}
+                    <div className="relative flex-shrink-0">
+                      <div 
+                        className={`w-14 h-14 bg-gradient-to-br ${getGradient(conversation.username)} rounded border-2 border-white flex items-center justify-center text-white font-bold text-lg overflow-hidden`}
+                        style={{
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+                        }}
+                      >
+                        {conversation.profilePicture ? (
+                          <img 
+                            src={conversation.profilePicture} 
+                            alt={conversation.username}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.textContent = getInitials(conversation.username);
+                            }}
+                          />
+                        ) : (
+                          getInitials(conversation.username)
+                        )}
+                      </div>
+                      
+                      {/* Ícone de status estilo MSN */}
+                      <div 
+                        className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[10px]"
+                        style={{
+                          background: conversation.isOnline 
+                            ? 'linear-gradient(to bottom, #7FBA00, #5E8C00)' 
+                            : 'linear-gradient(to bottom, #999999, #666666)',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.4)'
+                        }}
+                      >
+                        {conversation.isOnline ? '✓' : '—'}
+                      </div>
                     </div>
-                    {/* Status online/offline */}
-                    {conversation.isOnline && (
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-                    )}
-                  </div>
-                  
-                  {/* Info da conversa */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-gray-800 text-lg">
-                        {conversation.username}
-                      </h3>
-                      {conversation.unreadCount > 0 && (
-                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                          {conversation.unreadCount}
-                        </span>
+
+                    {/* Info da conversa */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="font-bold text-[#003399] text-sm truncate group-hover:text-[#0066CC]" style={{ fontFamily: 'Tahoma, sans-serif' }}>
+                          {conversation.username}
+                        </h3>
+                        {conversation.unreadCount > 0 && (
+                          <span 
+                            className="text-[10px] font-bold text-white px-1.5 py-0.5 rounded"
+                            style={{
+                              background: 'linear-gradient(to bottom, #FF6B6B, #CC0000)',
+                              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+                            }}
+                          >
+                            {conversation.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Última mensagem */}
+                      <p className="text-xs text-gray-700 truncate mb-1" style={{ fontFamily: 'Tahoma, sans-serif' }}>
+                        {conversation.lastMessage || 'Sem mensagens ainda...'}
+                      </p>
+                      
+                      {/* Data/Hora */}
+                      {conversation.lastMessageDate && (
+                        <p className="text-[10px] text-gray-500" style={{ fontFamily: 'Tahoma, sans-serif' }}>
+                          {formatTime(conversation.lastMessageDate)}
+                        </p>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 truncate">
-                      {conversation.lastMessage || 'Sem mensagens ainda...'}
-                    </p>
+
+                    {/* Botões de ação estilo XP */}
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      {/* Botão de mensagem */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleConversationClick(conversation);
+                        }}
+                        className="w-8 h-8 bg-gradient-to-b from-white to-[#D0E8FF] border border-[#003C8C] rounded flex items-center justify-center hover:from-[#E0F0FF] hover:to-[#C0DCFF] transition-all shadow-sm hover:shadow active:shadow-inner"
+                        title="Abrir conversa"
+                      >
+                        <span className="text-sm">💬</span>
+                      </button>
+                      
+                      {/* Botão de mais opções */}
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-8 h-8 bg-gradient-to-b from-white to-[#E0E8F0] border border-[#5C93C9] rounded flex items-center justify-center hover:from-[#F0F4FF] hover:to-[#D0DCF0] transition-all shadow-sm hover:shadow active:shadow-inner"
+                        title="Mais opções"
+                      >
+                        <span className="text-xs font-bold text-[#003399]">⋯</span>
+                      </button>
+                    </div>
                   </div>
-                  
-                  {/* Horário */}
-                  <div className="flex flex-col items-end gap-2">
-                    {conversation.lastMessageDate && (
-                      <span className="text-xs text-gray-500 font-medium">
-                        {formatTime(conversation.lastMessageDate)}
-                      </span>
-                    )}
-                  </div>
+
+                  {/* Efeito de hover estilo XP */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                 </div>
               ))}
             </div>
           )}
         </XPWindow>
       ) : (
-        <XPWindow title="👥 Todos os Usuários">
+        <XPWindow title="Todos os Usuários">
           {users.length === 0 ? (
             <div className="text-center py-12">
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
@@ -217,30 +296,105 @@ export function Home() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 p-3">
               {users.map((user) => (
                 <div
                   key={user.id}
                   onClick={() => handleUserClick(user)}
-                  className="flex items-center gap-4 p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-green-400 hover:shadow-lg transition-all cursor-pointer group"
+                  className="relative bg-gradient-to-b from-white to-[#F0F4FF] border-2 border-[#5C93C9] hover:border-[#0066CC] rounded cursor-pointer group transition-all hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_2px_4px_rgba(0,0,0,0.2)]"
+                  style={{
+                    boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.15)'
+                  }}
                 >
-                  {/* Avatar */}
-                  <div className={`w-12 h-12 bg-gradient-to-br ${getGradient(user.userName)} rounded-full flex items-center justify-center text-white font-bold shadow-md group-hover:scale-110 transition-transform`}>
-                    {getInitials(user.userName)}
+                  {/* Barra lateral colorida (estilo MSN) */}
+                  <div 
+                    className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${
+                      user.isOnline 
+                        ? 'from-[#7FBA00] to-[#5E8C00]' 
+                        : 'from-gray-400 to-gray-600'
+                    }`}
+                  ></div>
+
+                  <div className="flex items-center gap-3 p-3 pl-4">
+                    {/* Avatar com estilo MSN */}
+                    <div className="relative flex-shrink-0">
+                      <div 
+                        className={`w-14 h-14 bg-gradient-to-br ${getGradient(user.userName)} rounded border-2 border-white flex items-center justify-center text-white font-bold text-lg overflow-hidden`}
+                        style={{
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+                        }}
+                      >
+                        {user.profilePicture ? (
+                          <img 
+                            src={user.profilePicture} 
+                            alt={user.userName}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.textContent = getInitials(user.userName);
+                            }}
+                          />
+                        ) : (
+                          getInitials(user.userName)
+                        )}
+                      </div>
+                      
+                      {/* Ícone de status estilo MSN */}
+                      <div 
+                        className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[10px]"
+                        style={{
+                          background: user.isOnline 
+                            ? 'linear-gradient(to bottom, #7FBA00, #5E8C00)' 
+                            : 'linear-gradient(to bottom, #999999, #666666)',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.4)'
+                        }}
+                      >
+                        {user.isOnline ? '✓' : '—'}
+                      </div>
+                    </div>
+
+                    {/* Info do usuário */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-[#003399] text-sm truncate group-hover:text-[#0066CC]" style={{ fontFamily: 'Tahoma, sans-serif' }}>
+                        {user.userName}
+                      </h3>
+                      <p className="text-xs text-gray-600 truncate" style={{ fontFamily: 'Tahoma, sans-serif' }}>
+                        {user.email}
+                      </p>
+                      
+                      {/* Mensagem de status estilo MSN */}
+                      <p className="text-[10px] text-gray-500 italic mt-0.5 truncate">
+                        {user.isOnline ? '🟢 Online' : '⚫ Offline'}
+                      </p>
+                    </div>
+
+                    {/* Botões de ação estilo XP */}
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      {/* Botão de mensagem */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUserClick(user);
+                        }}
+                        className="w-8 h-8 bg-gradient-to-b from-white to-[#D0E8FF] border border-[#003C8C] rounded flex items-center justify-center hover:from-[#E0F0FF] hover:to-[#C0DCFF] transition-all shadow-sm hover:shadow active:shadow-inner"
+                        title="Enviar mensagem"
+                      >
+                        <span className="text-sm">💬</span>
+                      </button>
+                      
+                      {/* Botão de mais opções */}
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-8 h-8 bg-gradient-to-b from-white to-[#E0E8F0] border border-[#5C93C9] rounded flex items-center justify-center hover:from-[#F0F4FF] hover:to-[#D0DCF0] transition-all shadow-sm hover:shadow active:shadow-inner"
+                        title="Mais opções"
+                      >
+                        <span className="text-xs font-bold text-[#003399]">⋯</span>
+                      </button>
+                    </div>
                   </div>
-                  
-                  {/* Info do usuário */}
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-800">
-                      {user.userName}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      {user.email}
-                    </p>
-                  </div>
-                  
-                  {/* Status */}
-                  <StatusDot status={user.isOnline ? 'available' : 'offline'} />
+
+                  {/* Efeito de hover estilo XP */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                 </div>
               ))}
             </div>

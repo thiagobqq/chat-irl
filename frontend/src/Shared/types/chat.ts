@@ -40,6 +40,7 @@ export interface Conversation {
   lastMessage: string;
   lastMessageDate: Date | string | null;
   unreadCount: number;
+  profilePicture?: string;
   isOnline: boolean;
 }
 

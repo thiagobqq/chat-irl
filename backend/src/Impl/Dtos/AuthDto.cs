@@ -51,6 +51,8 @@ namespace src.Application.Dtos
         public string? email { get; set; }
         public string? username { get; set; }
 
+        public string? profilePicture { get; set; }
+
         public string? Id { get; set; }
 
         

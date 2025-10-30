@@ -9,6 +9,7 @@ import { useAuth } from "../../Shared/Contexts";
 import { apiService } from "../../Shared/Services/api";
 import { signalRService } from "../../Shared/Services/signalr";
 import { convertStatusToString } from "../../Shared/Utils/mappers";
+import { useLocation } from "react-router-dom"; 
 import type { Contact, Message } from "../../Shared/types/chat";
 
 export function Chat() {
@@ -20,6 +21,7 @@ export function Chat() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const typingTimerRef = useRef<number | null>(null);
+   const location = useLocation(); 
 
   useEffect(() => {
     if (user) {
@@ -35,6 +37,16 @@ export function Chat() {
     }
   }, [selectedContact?.id]);
 
+   useEffect(() => {
+    const selectedUserId = location.state?.selectedUserId;
+    if (selectedUserId && contacts.length > 0) {
+      const contact = contacts.find(c => c.id === selectedUserId);
+      if (contact) {
+        setSelectedContact(contact);
+      }
+    }
+  }, [location.state, contacts]);
+
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -46,22 +58,32 @@ export function Chat() {
   };
 
   const loadUsers = async () => {
-    try {
-      const users = await apiService.getUsers();
-      const mappedContacts: Contact[] = users
-        .filter((u) => u.id !== user?.id)
-        .map((u) => ({
+  try {
+    const users = await apiService.getUsers();
+    console.log('📋 TODOS os usuários da API:', users); // Veja o que vem aqui
+    
+    const mappedContacts: Contact[] = users
+      .filter((u) => u.id !== user?.id)
+      .map((u) => {
+        console.log('👤 Usuário individual:', u); // Veja cada usuário
+        console.log('🖼️ Avatar do usuário:', u.profilePicture); // Veja especificamente o avatar
+        
+        return {
           id: u.id,
           name: u.userName,
           email: u.email,
           status: convertStatusToString(u.status),
-        }));
-      setContacts(mappedContacts);
-    } catch (error) {
-      console.error("Erro ao carregar usuários:", error);
-      toast.error("Erro ao carregar usuários");
-    }
-  };
+          avatar: u.profilePicture,
+        };
+      });
+    
+    console.log('✅ Contatos finais mapeados:', mappedContacts);
+    setContacts(mappedContacts);
+  } catch (error) {
+    console.error("Erro ao carregar usuários:", error);
+    toast.error("Erro ao carregar usuários");
+  }
+};
 
   const loadChatHistory = async (userId: string) => {
     try {
@@ -189,6 +211,8 @@ export function Chat() {
                             isOwnMessage={isOwn}
                             senderName={isOwn ? "Você" : selectedContact.name}
                             timestamp={new Date(msg.sentAt)}
+                            avatar={isOwn ? user?.avatar : selectedContact.avatar}
+
                           />
                         );
                       })

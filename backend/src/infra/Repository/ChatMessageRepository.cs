@@ -63,11 +63,12 @@ namespace src.infra.Repository
                     {
                         UserId = conv.UserId,
                         Username = user.UserName!,
+                        ProfilePicture = user.ProfilePicture,
                         Email = user.Email!,
                         LastMessage = conv.LastMessage?.Message!,
                         LastMessageDate = conv.LastMessage?.SentAt,
                         UnreadCount = conv.UnreadCount,
-                        IsOnline = false 
+                        IsOnline = false
                     });
                 }
             }
@@ -124,7 +125,8 @@ namespace src.infra.Repository
                     Id = u.Id,
                     UserName = u.UserName!,
                     Email = u.Email!,
-                    IsOnline = false 
+                    ProfilePicture = u.ProfilePicture,
+                    IsOnline = false
                 })
                 .ToListAsync();
 

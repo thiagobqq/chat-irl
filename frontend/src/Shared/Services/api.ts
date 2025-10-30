@@ -9,6 +9,7 @@ interface LoginResponse {
   id: string;
   userName: string;
   email: string;
+  profilePicture: string;
 }
 
 interface UserDTO {

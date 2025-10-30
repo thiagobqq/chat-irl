@@ -32,8 +32,6 @@ export function ContactList({ contacts, selectedContact, onSelectContact }: Cont
       {/* Lista de contatos */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {contacts.map((contact) => {
-          console.log('Contact status:', contact.status); // Debug
-          
           return (
             <button
               key={contact.id}
@@ -49,8 +47,21 @@ export function ContactList({ contacts, selectedContact, onSelectContact }: Cont
             >
               {/* Avatar com status */}
               <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
-                  {contact.name.charAt(0).toUpperCase()}
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md overflow-hidden">
+                  {contact.avatar ? (
+                    <img 
+                      src={contact.avatar} 
+                      alt={contact.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Se a imagem falhar ao carregar, mostra a letra
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement!.textContent = contact.name.charAt(0).toUpperCase();
+                      }}
+                    />
+                  ) : (
+                    contact.name.charAt(0).toUpperCase()
+                  )}
                 </div>
                 {/* Indicador de status */}
                 <div className="absolute -bottom-0 -right-0 bg-white rounded-full p-0.5">

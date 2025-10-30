@@ -7,6 +7,7 @@ interface User {
   id: string;
   userName: string;
   email: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   register: (userName: string, email: string, password: string) => Promise<void>;
+  setUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: response.userId || response.id,
       userName: response.userName,
       email: response.email,
+      avatar: response.profilePicture, 
     };
 
     setUser(userData);
@@ -97,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         register,
+        setUser,
       }}
     >
       {children}

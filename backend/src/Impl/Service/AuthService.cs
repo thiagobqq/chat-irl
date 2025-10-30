@@ -41,6 +41,7 @@ namespace src.Impl.Service
                 email = user!.Email,
                 username = user.UserName,
                 Token = await _tokenService.createToken(user),
+                profilePicture = user.ProfilePicture,
                 Id = user.Id
             };
         }
@@ -70,6 +71,7 @@ namespace src.Impl.Service
             {
                 Email = newUser.Email,
                 Name = newUser.UserName,
+                
                 Token = await _tokenService.createToken(newUser)
             };
         }

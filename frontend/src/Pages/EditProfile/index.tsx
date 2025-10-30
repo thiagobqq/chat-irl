@@ -9,7 +9,7 @@ import { convertStatusToString, convertStatusToNumber, type UserStatusString } f
 
 export function EditProfile() {
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, setUser  } = useAuth();
   
   const [displayName, setDisplayName] = useState("");
   const [status, setStatus] = useState<UserStatusString>("Available");
@@ -82,36 +82,48 @@ export function EditProfile() {
   };
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!displayName.trim()) {
-      toast.error("Por favor, preencha o nome de exibição");
-      return;
-    }
+  e.preventDefault();
+  
+  if (!displayName.trim()) {
+    toast.error("Por favor, preencha o nome de exibição");
+    return;
+  }
 
-    setIsLoading(true);
-    const toastId = toast.loading("Salvando perfil...");
+  setIsLoading(true);
+  const toastId = toast.loading("Salvando perfil...");
+  
+  try {
+    const userDto = {
+      username: displayName.trim(),
+      profilePicture: avatarUrl,
+      backgroundPicture: customBackgroundUrl,
+      description: bio.trim(),
+      status: convertStatusToNumber(status)
+    };
     
-    try {
-      const userDto = {
-        username: displayName.trim(),
-        profilePicture: avatarUrl,
-        backgroundPicture: customBackgroundUrl,
-        description: bio.trim(),
-        status: convertStatusToNumber(status)
+    await apiService.updateUserProfile(userDto);
+
+    // ✅ CORREÇÃO AQUI:
+    if (currentUser) {
+      const updatedUser = {
+        ...currentUser,
+        userName: displayName.trim(),
+        avatar: avatarUrl, // profilePicture vira avatar
       };
       
-      await apiService.updateUserProfile(userDto);
-      
-      toast.success("Perfil atualizado com sucesso!", { id: toastId });
-      setTimeout(() => navigate("/home"), 1000);
-    } catch (error: any) {
-      console.error("❌ Erro ao salvar perfil:", error);
-      toast.error(error.message || "Erro ao salvar perfil. Tente novamente.", { id: toastId });
-    } finally {
-      setIsLoading(false);
+      setUser(updatedUser); // Passa o objeto, não a string!
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
-  };
+    
+    toast.success("Perfil atualizado com sucesso!", { id: toastId });
+    setTimeout(() => navigate("/home"), 1000);
+  } catch (error: any) {
+    console.error("❌ Erro ao salvar perfil:", error);
+    toast.error(error.message || "Erro ao salvar perfil. Tente novamente.", { id: toastId });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const defaultAvatar = currentUser?.email 
     ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.email}`

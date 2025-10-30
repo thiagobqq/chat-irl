@@ -21,8 +21,10 @@ namespace src.Impl.Dtos
     {
         public string UserId { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
+        public string ProfilePicture { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string LastMessage { get; set; } = string.Empty;
+        
         public DateTime? LastMessageDate { get; set; }
         public int UnreadCount { get; set; }
         public bool IsOnline { get; set; }
@@ -39,6 +41,9 @@ namespace src.Impl.Dtos
         public string Id { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+
+        public string ProfilePicture { get; set; } = string.Empty;
+
         public bool IsOnline { get; set; }
     }
     

@@ -3,9 +3,16 @@ interface MessageBubbleProps {
   isOwnMessage: boolean;
   senderName: string;
   timestamp: Date;
+  avatar?: string; // Adicionar esta propriedade
 }
 
-export function MessageBubble({ content, isOwnMessage, senderName, timestamp }: MessageBubbleProps) {
+export function MessageBubble({ 
+  content, 
+  isOwnMessage, 
+  senderName, 
+  timestamp,
+  avatar // Adicionar aqui
+}: MessageBubbleProps) {
   const time = timestamp.toLocaleTimeString('pt-BR', {
     hour: '2-digit',
     minute: '2-digit'
@@ -14,12 +21,25 @@ export function MessageBubble({ content, isOwnMessage, senderName, timestamp }: 
   return (
     <div className={`flex gap-2 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} animate-[slideIn_0.2s_ease-out]`}>
       {/* Avatar */}
-      <div className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md ${
+      <div className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md overflow-hidden ${
         isOwnMessage 
           ? 'bg-gradient-to-br from-blue-400 to-blue-600' 
           : 'bg-gradient-to-br from-purple-400 to-purple-600'
       }`}>
-        {senderName.charAt(0).toUpperCase()}
+        {avatar ? (
+          <img 
+            src={avatar} 
+            alt={senderName}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Se a imagem falhar ao carregar, mostra a letra
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.parentElement!.textContent = senderName.charAt(0).toUpperCase();
+            }}
+          />
+        ) : (
+          senderName.charAt(0).toUpperCase()
+        )}
       </div>
 
       {/* Mensagem */}
