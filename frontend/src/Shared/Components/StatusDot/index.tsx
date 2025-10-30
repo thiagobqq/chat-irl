@@ -16,7 +16,6 @@ export function StatusDot({ status }: StatusDotProps) {
   const normalizedStatus = (status?.toLowerCase() || 'offline') as Status;
   const color = statusColors[normalizedStatus] || statusColors.offline;
   
-  console.log('StatusDot:', { status, normalizedStatus, color }); // Debug
   
   return (
     <div className={`w-3 h-3 rounded-full ${color} border-2 border-white shadow-sm`} />

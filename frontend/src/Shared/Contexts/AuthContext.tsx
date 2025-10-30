@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../Services/api';
 import { signalRService } from '../Services/signalr';
+import type { Message } from '../types/chat';
 
 interface User {
   id: string;
@@ -20,6 +21,8 @@ interface AuthContextType {
   logout: () => void;
   register: (userName: string, email: string, password: string) => Promise<void>;
   setUser: (user: User) => void;
+  registerMessageHandler: (handler: (message: Message) => void) => void;
+  unregisterMessageHandler: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,9 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const navigate = useNavigate();
+  
+  const messageHandlerRef = useRef<((message: Message) => void) | null>(null);
+  const groupMessageHandlerRef = useRef<((message: Message) => void) | null>(null);
 
   useEffect(() => {
-    // Verificar se há token salvo
     const savedToken = apiService.getToken();
     const savedUser = localStorage.getItem('user');
     
@@ -44,12 +49,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const connectToSignalR = async (authToken: string) => {
     const connected = await signalRService.connect(authToken, {
+      onMessageSent: (message: Message) => {
+        if (messageHandlerRef.current) {
+          messageHandlerRef.current(message);
+        }
+      },
+      onReceiveMessage: (message: Message) => {
+        if (messageHandlerRef.current) {
+          messageHandlerRef.current(message);
+        }
+      },
+      onReceiveGroupMessage: (message: Message) => {
+        console.log('📨 AuthContext recebeu mensagem de grupo:', message);
+        if (groupMessageHandlerRef.current) {
+          groupMessageHandlerRef.current(message);
+        }
+      },
       onError: (error: any) => {
         console.error('SignalR Error:', error);
       },
     });
     
     setIsConnected(connected);
+  };
+
+  const registerMessageHandler = (handler: (message: Message) => void) => {
+    messageHandlerRef.current = handler;
+  };
+
+  const unregisterMessageHandler = () => {
+    messageHandlerRef.current = null;
   };
 
   const login = async (email: string, password: string) => {
@@ -75,7 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (userName: string, email: string, password: string) => {
     await apiService.register(userName, email, password);
-    // Após registrar, fazer login automaticamente
     await login(email, password);
   };
 
@@ -103,6 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         register,
         setUser,
+        registerMessageHandler,
+        unregisterMessageHandler,
       }}
     >
       {children}

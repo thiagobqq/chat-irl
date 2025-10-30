@@ -66,7 +66,6 @@ class ApiService {
 
     const fullUrl = `${this.baseUrl}/api${url}`;
     
-    console.log('🌐 Fazendo requisição:', fullUrl);
     
     const response = await fetch(fullUrl, {
       ...options,
@@ -79,7 +78,6 @@ class ApiService {
     }
 
     const data = await response.json();
-    console.log('📦 Resposta da API:', data);
     
     return data;
   }
@@ -182,7 +180,6 @@ class ApiService {
   async getChatHistory(userId: string): Promise<Message[]> {
     try {
       const data = await this.fetchWithAuth(`/chat/history/${userId}`);
-      console.log('📥 Mensagens brutas do backend:', data);
       
       // Verificar estrutura
       if (!Array.isArray(data)) {
@@ -190,14 +187,9 @@ class ApiService {
         return [];
       }
 
-      // Mostrar primeira mensagem para debug
-      if (data.length > 0) {
-        console.log('🔍 Exemplo de mensagem:', data[0]);
-        console.log('🔍 Campos disponíveis:', Object.keys(data[0]));
-      }
+    
       
       const normalized = normalizeMessages(data);
-      console.log('✅ Mensagens normalizadas:', normalized);
       
       return normalized;
     } catch (error) {
@@ -222,7 +214,6 @@ class ApiService {
   async getGroupMessages(groupId: number): Promise<Message[]> {
     try {
       const data = await this.fetchWithAuth(`/group/${groupId}/messages`);
-      console.log('📥 Mensagens do grupo (brutas):', data);
       
       if (!Array.isArray(data)) {
         console.error('❌ Resposta não é um array:', data);
@@ -230,11 +221,10 @@ class ApiService {
       }
       
       const normalized = normalizeMessages(data);
-      console.log('✅ Mensagens do grupo (normalizadas):', normalized);
       
       return normalized;
     } catch (error) {
-      console.error('❌ Erro ao carregar mensagens do grupo:', error);
+       console.error('❌ Erro ao carregar mensagens do grupo:', error);
       return [];
     }
   }

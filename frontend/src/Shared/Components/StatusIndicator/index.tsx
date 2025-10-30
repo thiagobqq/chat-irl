@@ -17,7 +17,6 @@ export function StatusIndicator({ status, showLabel = false }: StatusIndicatorPr
   const normalizedStatus = (status?.toLowerCase() || 'offline') as Status;
   const config = statusConfig[normalizedStatus] || statusConfig.offline;
 
-  console.log('StatusIndicator:', { status, normalizedStatus, config }); // Debug
 
   if (showLabel) {
     return (

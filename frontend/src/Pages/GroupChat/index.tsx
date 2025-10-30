@@ -22,6 +22,37 @@ export function GroupChat() {
   const [isCreating, setIsCreating] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // Handlers em tempo real (mensagens de grupo, join/leave)
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const handleGroupMessage = (message: Message) => {
+      setMessages(prev => {
+        const exists = prev.some(m => m.id === message.id);
+        if (exists) return prev;
+        if (selectedRoom && Number(message.groupId) === Number(selectedRoom.id)) {
+          return [...prev, message];
+        }
+        return prev;
+      });
+      setTimeout(scrollToBottom, 50);
+    };
+
+    signalRService.updateCallbacks({
+      onReceiveGroupMessage: handleGroupMessage,
+      onUserJoinedGroup: (userId: string, groupId: number) => {
+        if (selectedRoom && Number(groupId) === Number(selectedRoom.id)) {
+          console.log(`👤 ${userId} entrou no grupo ${groupId}`);
+        }
+      },
+      onUserLeftGroup: (userId: string, groupId: number) => {
+        if (selectedRoom && Number(groupId) === Number(selectedRoom.id)) {
+          console.log(`👤 ${userId} saiu do grupo ${groupId}`);
+        }
+      }
+    });
+  }, [isConnected, selectedRoom?.id]);
+
   // Carregar grupos
   useEffect(() => {
     if (user) {
@@ -29,12 +60,12 @@ export function GroupChat() {
     }
   }, [user]);
 
-  // Carregar mensagens quando selecionar grupo
+  // Carregar mensagens e entrar/sair do grupo quando selecionar
   useEffect(() => {
     if (selectedRoom) {
       loadGroupMessages(selectedRoom.id);
       signalRService.joinGroup(selectedRoom.id);
-      
+
       return () => {
         signalRService.leaveGroup(selectedRoom.id);
       };
@@ -52,30 +83,22 @@ export function GroupChat() {
   const loadGroups = async () => {
     try {
       const groups = await apiService.getMyGroups();
-      console.log('📁 Grupos carregados:', groups);
       setRooms(groups);
     } catch (error) {
-      console.error("Erro ao carregar grupos:", error);
       toast.error("Erro ao carregar grupos");
     }
   };
 
   const loadGroupMessages = async (groupId: number) => {
     try {
-      console.log('📜 Carregando mensagens do grupo:', groupId);
       const groupMessages = await apiService.getGroupMessages(groupId);
-      console.log('📨 Mensagens do grupo recebidas:', groupMessages);
-      
-      // Garantir que todas as mensagens tenham groupId
       const messagesWithGroupId = groupMessages.map(msg => ({
         ...msg,
         groupId: msg.groupId ?? groupId
       }));
-      
       setMessages(messagesWithGroupId);
-      setTimeout(scrollToBottom, 100);
+      setTimeout(scrollToBottom, 50);
     } catch (error) {
-      console.error("Erro ao carregar mensagens do grupo:", error);
       toast.error("Erro ao carregar mensagens do grupo");
     }
   };
@@ -85,7 +108,6 @@ export function GroupChat() {
       const users = await apiService.getUsers();
       setAllUsers(users.filter((u) => u.id !== user?.id));
     } catch (error) {
-      console.error("Erro ao carregar usuários:", error);
       toast.error("Erro ao carregar usuários");
     }
   };
@@ -112,7 +134,7 @@ export function GroupChat() {
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newGroupName.trim() || selectedMembers.length === 0) {
       toast.error("Digite um nome e selecione pelo menos um membro");
       return;
@@ -127,7 +149,6 @@ export function GroupChat() {
       closeCreateGroupModal();
       toast.success("Grupo criado com sucesso!", { id: toastId });
     } catch (error: any) {
-      console.error("Erro ao criar grupo:", error);
       toast.error(error.message || "Erro ao criar grupo", { id: toastId });
     } finally {
       setIsCreating(false);
@@ -139,20 +160,10 @@ export function GroupChat() {
     if (!messageText.trim() || !selectedRoom || !isConnected) return;
 
     try {
-      console.log('📤 Enviando mensagem ao grupo:', {
-        groupId: selectedRoom.id,
-        message: messageText
-      });
-      
       await signalRService.sendMessageToGroup(selectedRoom.id, messageText);
       setMessageText("");
-      
-      // Recarregar mensagens após enviar
-      setTimeout(() => {
-        loadGroupMessages(selectedRoom.id);
-      }, 300);
+      // Sem reload — a mensagem chega pelo onReceiveGroupMessage
     } catch (error) {
-      console.error("Erro ao enviar mensagem:", error);
       toast.error("Erro ao enviar mensagem. Tente novamente.");
     }
   };
@@ -170,7 +181,6 @@ export function GroupChat() {
   return (
     <div className="fixed inset-0 pt-28 pb-6 px-4">
       <div className="container mx-auto h-full max-w-7xl">
-        {/* Status de conexão */}
         {!isConnected && (
           <div className="mb-4 bg-yellow-500 text-white text-center py-2 rounded-lg text-sm font-semibold">
             ⚠️ Reconectando ao servidor...
@@ -178,7 +188,7 @@ export function GroupChat() {
         )}
 
         <div className="grid lg:grid-cols-[320px_1fr] gap-4 h-full">
-          {/* Lista de Grupos - Com scroll próprio */}
+          {/* Lista de Grupos */}
           <div className="h-full overflow-hidden flex flex-col bg-white/85 backdrop-blur-md border border-white/50 rounded-lg shadow-glass p-3">
             <div className="flex items-center justify-between mb-4 flex-shrink-0">
               <h3 className="text-sm font-bold text-blue-800">Grupos</h3>
@@ -190,7 +200,6 @@ export function GroupChat() {
               </button>
             </div>
 
-            {/* SCROLL APENAS AQUI */}
             <div className="flex-1 overflow-y-auto space-y-1">
               {rooms.length === 0 ? (
                 <div className="text-center text-gray-500 text-sm py-8">
@@ -225,7 +234,7 @@ export function GroupChat() {
             </div>
           </div>
 
-          {/* Área de Chat - Com scroll apenas nas mensagens */}
+          {/* Área de Chat */}
           <div className="h-full overflow-hidden">
             <XPWindow
               title={
@@ -237,7 +246,6 @@ export function GroupChat() {
             >
               {selectedRoom ? (
                 <div className="flex flex-col h-full">
-                  {/* Mensagens - SCROLL AQUI */}
                   <div
                     ref={messagesContainerRef}
                     className="flex-1 p-6 space-y-3 overflow-y-auto bg-gradient-to-b from-[#F0FFF4] to-white"
@@ -252,7 +260,6 @@ export function GroupChat() {
                     ) : (
                       messages.map((msg) => {
                         const isOwn = String(msg.senderId) === String(user?.id);
-                        
                         return (
                           <MessageBubble
                             key={msg.id}
@@ -266,7 +273,6 @@ export function GroupChat() {
                     )}
                   </div>
 
-                  {/* Input de mensagem - FIXO */}
                   <form
                     onSubmit={handleSendMessage}
                     className="p-4 border-t border-gray-200 bg-white flex-shrink-0"

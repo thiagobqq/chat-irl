@@ -13,7 +13,7 @@ import { useLocation } from "react-router-dom";
 import type { Contact, Message } from "../../Shared/types/chat";
 
 export function Chat() {
-  const { user, isConnected } = useAuth();
+  const { user, isConnected, registerMessageHandler, unregisterMessageHandler } = useAuth(); 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -21,7 +21,59 @@ export function Chat() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const typingTimerRef = useRef<number | null>(null);
-   const location = useLocation(); 
+  const location = useLocation(); 
+
+  useEffect(() => {
+    const handleNewMessage = (message: Message) => {
+      console.log('💬 Chat recebeu nova mensagem:', message);
+      
+      setMessages(prev => {
+        const exists = prev.some(m => m.id === message.id);
+        if (exists) return prev;
+        
+        const isRelevant = selectedContact && (
+          (String(message.senderId) === String(selectedContact.id) && String(message.receiverId) === String(user?.id)) ||
+          (String(message.senderId) === String(user?.id) && String(message.receiverId) === String(selectedContact.id))
+        );
+        
+        if (isRelevant) {
+          console.log('✅ Mensagem adicionada ao chat');
+          return [...prev, message];
+        }
+        
+        return prev;
+      });
+      
+      setTimeout(scrollToBottom, 100);
+    };
+
+    if (registerMessageHandler) {
+      registerMessageHandler(handleNewMessage);
+    }
+
+    return () => {
+      if (unregisterMessageHandler) {
+        unregisterMessageHandler();
+      }
+    };
+  }, [selectedContact?.id, user?.id, registerMessageHandler, unregisterMessageHandler]); 
+
+  useEffect(() => {
+    if (!signalRService.isConnected()) return;
+
+    signalRService.updateCallbacks({
+      onUserTyping: (userId: string) => {
+        if (selectedContact && userId === selectedContact.id) {
+          setIsTyping(true);
+        }
+      },
+      onUserStoppedTyping: (userId: string) => {
+        if (selectedContact && userId === selectedContact.id) {
+          setIsTyping(false);
+        }
+      }
+    });
+  }, [selectedContact?.id]);
 
   useEffect(() => {
     if (user) {
@@ -37,7 +89,7 @@ export function Chat() {
     }
   }, [selectedContact?.id]);
 
-   useEffect(() => {
+  useEffect(() => {
     const selectedUserId = location.state?.selectedUserId;
     if (selectedUserId && contacts.length > 0) {
       const contact = contacts.find(c => c.id === selectedUserId);
@@ -58,32 +110,26 @@ export function Chat() {
   };
 
   const loadUsers = async () => {
-  try {
-    const users = await apiService.getUsers();
-    console.log('📋 TODOS os usuários da API:', users); // Veja o que vem aqui
-    
-    const mappedContacts: Contact[] = users
-      .filter((u) => u.id !== user?.id)
-      .map((u) => {
-        console.log('👤 Usuário individual:', u); // Veja cada usuário
-        console.log('🖼️ Avatar do usuário:', u.profilePicture); // Veja especificamente o avatar
-        
-        return {
-          id: u.id,
-          name: u.userName,
-          email: u.email,
-          status: convertStatusToString(u.status),
-          avatar: u.profilePicture,
-        };
-      });
-    
-    console.log('✅ Contatos finais mapeados:', mappedContacts);
-    setContacts(mappedContacts);
-  } catch (error) {
-    console.error("Erro ao carregar usuários:", error);
-    toast.error("Erro ao carregar usuários");
-  }
-};
+    try {
+      const users = await apiService.getUsers();
+      
+      const mappedContacts: Contact[] = users
+        .filter((u) => u.id !== user?.id)
+        .map((u) => {
+          return {
+            id: u.id,
+            name: u.userName,
+            email: u.email,
+            status: convertStatusToString(u.status),
+            avatar: u.profilePicture,
+          };
+        });
+      
+      setContacts(mappedContacts);
+    } catch (error) {
+      toast.error("Erro ao carregar usuários");
+    }
+  };
 
   const loadChatHistory = async (userId: string) => {
     try {
@@ -91,7 +137,6 @@ export function Chat() {
       setMessages(history);
       setTimeout(scrollToBottom, 100);
     } catch (error) {
-      console.error("Erro ao carregar histórico:", error);
       toast.error("Erro ao carregar histórico de mensagens");
     }
   };
@@ -104,11 +149,7 @@ export function Chat() {
       await signalRService.sendMessageToUser(selectedContact.id, messageText);
       setMessageText("");
       
-      setTimeout(() => {
-        loadChatHistory(selectedContact.id);
-      }, 300);
     } catch (error) {
-      console.error("Erro ao enviar mensagem:", error);
       toast.error("Erro ao enviar mensagem. Tente novamente.");
     }
   };
@@ -135,6 +176,7 @@ export function Chat() {
     }
   };
 
+  
   if (!user) {
     return (
       <div className="container mx-auto px-4">
@@ -212,7 +254,6 @@ export function Chat() {
                             senderName={isOwn ? "Você" : selectedContact.name}
                             timestamp={new Date(msg.sentAt)}
                             avatar={isOwn ? user?.avatar : selectedContact.avatar}
-
                           />
                         );
                       })

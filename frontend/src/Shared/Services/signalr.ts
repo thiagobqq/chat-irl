@@ -33,6 +33,10 @@ class SignalRService {
     this.hubUrl = url;
   }
 
+  updateCallbacks(newCallbacks: Partial<SignalRCallbacks>) {
+    this.callbacks = { ...this.callbacks, ...newCallbacks };
+  }
+
   async connect(token: string, callbacks: SignalRCallbacks) {
     this.callbacks = callbacks;
 
@@ -55,7 +59,6 @@ class SignalRService {
 
     try {
       await this.connection.start();
-      console.log('✅ Conectado ao SignalR em:', this.hubUrl);
       this.reconnectAttempts = 0;
       return true;
     } catch (err) {
@@ -73,11 +76,9 @@ class SignalRService {
   private setupEventHandlers() {
   if (!this.connection) return;
 
-  this.connection.on('ReceiveMessage', (apiMessage: any) => {
-    console.log('📨 Mensagem recebida (bruta):', apiMessage);
+   this.connection.on('ReceiveMessage', (apiMessage: any) => {
     try {
       const message = normalizeMessage(apiMessage);
-      console.log('📨 Mensagem normalizada:', message);
       this.callbacks.onReceiveMessage?.(message);
     } catch (error) {
       console.error('❌ Erro ao processar mensagem recebida:', error, apiMessage);
@@ -85,10 +86,8 @@ class SignalRService {
   });
 
   this.connection.on('MessageSent', (apiMessage: any) => {
-    console.log('✅ Mensagem enviada (bruta):', apiMessage);
     try {
       const message = normalizeMessage(apiMessage);
-      console.log('✅ Mensagem enviada (normalizada):', message);
       this.callbacks.onMessageSent?.(message);
     } catch (error) {
       console.error('❌ Erro ao processar mensagem enviada:', error, apiMessage);
@@ -96,10 +95,8 @@ class SignalRService {
   });
 
   this.connection.on('ReceiveGroupMessage', (apiMessage: any) => {
-    console.log('📨 Mensagem de grupo (bruta):', apiMessage);
     try {
       const message = normalizeMessage(apiMessage);
-      console.log('📨 Mensagem de grupo (normalizada):', message);
       this.callbacks.onReceiveGroupMessage?.(message);
     } catch (error) {
       console.error('❌ Erro ao processar mensagem de grupo:', error, apiMessage);
@@ -139,15 +136,12 @@ class SignalRService {
     });
 
     this.connection.onreconnecting((error) => {
-      console.log('🔄 Reconectando ao SignalR...', error);
     });
 
     this.connection.onreconnected((connectionId) => {
-      console.log('✅ Reconectado ao SignalR:', connectionId);
     });
 
     this.connection.onclose((error) => {
-      console.log('❌ Conexão SignalR fechada:', error);
     });
   }
 

@@ -31,10 +31,6 @@ export function Home() {
         apiService.getCurrentUser(),
       ]);
       
-      console.log('📊 Conversações:', conversationsData);
-      console.log('👥 Usuários:', usersData);
-      console.log('👤 Usuário atual:', currentUserData);
-      
       setConversations(conversationsData);
       setCurrentUser(currentUserData);
       setUsers(usersData.filter(u => u.id !== currentUserData.id));
@@ -46,14 +42,12 @@ export function Home() {
   };
 
   const handleConversationClick = (conversation: Conversation) => {
-    console.log('🔵 Clicou na conversa:', conversation);
     navigate('/chat', { 
       state: { selectedUserId: conversation.userId } 
     });
   };
 
   const handleUserClick = (user: User) => {
-    console.log('🔵 Clicou no usuário:', user);
     navigate('/chat', { 
       state: { selectedUserId: user.id } 
     });

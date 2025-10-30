@@ -40,7 +40,6 @@ export function EditProfile() {
       setAvatarUrl(userData.profilePicture || "");
       setCustomBackgroundUrl(userData.backgroundPicture || "");
     } catch (error) {
-      console.error("❌ Erro ao carregar perfil:", error);
       toast.error("Erro ao carregar perfil. Tente novamente.");
     } finally {
       setLoadingProfile(false);
@@ -119,7 +118,6 @@ export function EditProfile() {
     toast.success("Perfil atualizado com sucesso!", { id: toastId });
     setTimeout(() => navigate("/home"), 1000);
   } catch (error: any) {
-    console.error("❌ Erro ao salvar perfil:", error);
     toast.error(error.message || "Erro ao salvar perfil. Tente novamente.", { id: toastId });
   } finally {
     setIsLoading(false);
