@@ -42,6 +42,7 @@ namespace src.Impl.Service
                 username = user.UserName,
                 Token = await _tokenService.createToken(user),
                 profilePicture = user.ProfilePicture,
+                backgroundPicture =  user.BackgroundPicture,
                 Id = user.Id
             };
         }

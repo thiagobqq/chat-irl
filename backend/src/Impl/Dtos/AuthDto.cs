@@ -52,6 +52,7 @@ namespace src.Application.Dtos
         public string? username { get; set; }
 
         public string? profilePicture { get; set; }
+        public string? backgroundPicture { get; set; }
 
         public string? Id { get; set; }
 

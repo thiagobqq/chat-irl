@@ -8,6 +8,7 @@ interface User {
   userName: string;
   email: string;
   avatar?: string;
+  backgroundPicture?: string;
 }
 
 interface AuthContextType {
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userName: response.userName,
       email: response.email,
       avatar: response.profilePicture, 
+      backgroundPicture: response.backgroundPicture,
     };
 
     setUser(userData);

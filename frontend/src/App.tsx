@@ -35,11 +35,13 @@ function App() {
             },
           }}
         />
-      <Layout>
+      
         <AuthProvider>
+          <Layout>
           <AppRoutes />
+          </Layout>
         </AuthProvider>
-        </Layout>
+       
       </BrowserRouter>
     </>
   )

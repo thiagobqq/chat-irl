@@ -108,10 +108,11 @@ export function EditProfile() {
       const updatedUser = {
         ...currentUser,
         userName: displayName.trim(),
-        avatar: avatarUrl, // profilePicture vira avatar
+        avatar: avatarUrl, 
+        backgroundPicture: customBackgroundUrl,
       };
       
-      setUser(updatedUser); // Passa o objeto, não a string!
+      setUser(updatedUser); 
       localStorage.setItem('user', JSON.stringify(updatedUser));
     }
     

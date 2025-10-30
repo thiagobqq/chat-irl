@@ -4,6 +4,7 @@ import { XPButton } from "./XPButton";
 import { useState, useEffect, useRef } from "react";
 import { apiService } from "../Services/api";
 import { signalRService } from "../Services/signalr";
+import { useAuth } from "../Contexts";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ export default function Layout({ children }: LayoutProps) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const mainRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   const handleLogout = async (): Promise<void> => {
     try {
@@ -31,6 +33,16 @@ export default function Layout({ children }: LayoutProps) {
       window.location.reload();
     }
   };
+
+  const backgroundStyle = user?.backgroundPicture 
+    ? { 
+        backgroundImage: `url(${user.backgroundPicture})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }
+    : {
+        background: 'linear-gradient(to bottom right, #5EAEFF, #B7E3FF, white)',
+      };
 
   useEffect(() => {
     const mainElement = mainRef.current;
@@ -58,8 +70,10 @@ export default function Layout({ children }: LayoutProps) {
   }, [lastScrollY]);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-[#5EAEFF] via-[#B7E3FF] to-white relative overflow-hidden font-segoe">
-      {/* Background animado */}
+    <div 
+      className="h-screen relative overflow-hidden font-segoe"
+      style={backgroundStyle}
+    > {/* Background animado */}
       <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] animate-float pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(158,255,46,0.15)_0%,transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(0,120,215,0.15)_0%,transparent_50%)]" />

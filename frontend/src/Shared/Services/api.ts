@@ -10,6 +10,7 @@ interface LoginResponse {
   userName: string;
   email: string;
   profilePicture: string;
+  backgroundPicture: string;
 }
 
 interface UserDTO {
