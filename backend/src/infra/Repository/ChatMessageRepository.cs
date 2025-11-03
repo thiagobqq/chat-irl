@@ -124,7 +124,7 @@ namespace src.infra.Repository
                 {
                     Id = u.Id,
                     UserName = u.UserName!,
-                    Email = u.Email!,
+                    Description = u.Description!,
                     ProfilePicture = u.ProfilePicture,
                     IsOnline = false
                 })

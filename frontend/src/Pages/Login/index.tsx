@@ -152,12 +152,7 @@ export function Login() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-white/80 [text-shadow:_1px_1px_2px_rgba(0,0,0,0.3)]">
-            © 2024 RetroChat XP. Estilo Windows XP.
-          </p>
-        </div>
+        
       </div>
     </div>
   );

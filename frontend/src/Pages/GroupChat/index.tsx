@@ -42,12 +42,11 @@ export function GroupChat() {
       onReceiveGroupMessage: handleGroupMessage,
       onUserJoinedGroup: (userId: string, groupId: number) => {
         if (selectedRoom && Number(groupId) === Number(selectedRoom.id)) {
-          console.log(`👤 ${userId} entrou no grupo ${groupId}`);
+      
         }
       },
       onUserLeftGroup: (userId: string, groupId: number) => {
         if (selectedRoom && Number(groupId) === Number(selectedRoom.id)) {
-          console.log(`👤 ${userId} saiu do grupo ${groupId}`);
         }
       }
     });

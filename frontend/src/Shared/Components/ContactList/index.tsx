@@ -3,7 +3,7 @@ import {StatusIndicator} from "../StatusIndicator";
 interface Contact {
   id: string;
   name: string;
-  email: string;
+  description: string;
   status: "Available" | "Busy" | "Away" | "Offline";
   lastMessage?: string;
   avatar?: string;
@@ -69,13 +69,12 @@ export function ContactList({ contacts, selectedContact, onSelectContact }: Cont
                 </div>
               </div>
 
-              {/* Info */}
               <div className="flex-1 text-left min-w-0">
                 <h3 className="font-semibold text-gray-800 text-sm truncate">
                   {contact.name}
                 </h3>
                 <p className="text-xs text-gray-500 truncate">
-                  {contact.lastMessage || contact.email}
+                  {contact.lastMessage || contact.description}
                 </p>
               </div>
 

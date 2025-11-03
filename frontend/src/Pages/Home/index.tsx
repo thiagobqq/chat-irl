@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { XPWindow, StatusDot } from "../../Shared/Components";
+import { XPWindow, StatusDot, XPButton } from "../../Shared/Components";
 import { apiService } from "../../Shared/Services/api";
 import type { Conversation, User } from "../../Shared/types/chat";
 import { useAuth } from "../../Shared/Contexts";
@@ -101,26 +101,26 @@ export function Home() {
     <div className="container mx-auto px-6 py-8 max-w-6xl">
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
-        <button
+        <XPButton
           onClick={() => setActiveTab('conversations')}
           className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
             activeTab === 'conversations'
-              ? 'bg-blue-500 text-white shadow-md'
-              : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+              ? 'bg-gray-900 shadow-md'
+              : 'bg-white hover:bg-gray-500 border border-blue-500'
           }`}
         >
           Conversas {conversations.length > 0 && `(${conversations.length})`}
-        </button>
-        <button
+        </XPButton>
+        <XPButton
           onClick={() => setActiveTab('users')}
           className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
             activeTab === 'users'
-              ? 'bg-blue-500 text-white shadow-md'
-              : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+              ? 'bg-blue-500  shadow-md'
+              : 'bg-white hover:bg-gray-50 border border-gray-200'
           }`}
         >
           Usuários {users.length > 0 && `(${users.length})`}
-        </button>
+        </XPButton>
       </div>
 
       {/* Conteúdo das tabs */}

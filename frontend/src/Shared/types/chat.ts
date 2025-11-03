@@ -1,5 +1,6 @@
 export type UserStatusNumber = 0 | 1 | 2 | 3;
 export type Status = 'Available' | 'Busy' | 'Away' | 'Offline';
+export type ContactStatus = "Available" | "Busy" | "Away" | "Offline";
 
 export interface User {
   id: string;
@@ -13,12 +14,13 @@ export interface User {
 }
 
 export interface Contact {
-  id: string;
-  name: string;
-  email: string;
-  status: Status;
+  id: string;          
+  name: string;        
+  avatar?: string;     
+  status: ContactStatus;    
   lastMessage?: string;
-  avatar?: string;
+  lastMessageDate?: Date; 
+  description: string; 
 }
 
 export interface Message {

@@ -13,7 +13,6 @@ export function Register() {
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -43,10 +42,6 @@ export function Register() {
       return;
     }
 
-    if (!acceptedTerms) {
-      setError("Você precisa aceitar os termos de uso");
-      return;
-    }
 
     setIsLoading(true);
 
@@ -89,7 +84,7 @@ export function Register() {
               {/* Nome Completo */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Nome Completo
+                  Nome
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -177,26 +172,7 @@ export function Register() {
                 </div>
               )}
 
-              {/* Termos */}
-              <div className="flex items-start">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  checked={acceptedTerms}
-                  onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="w-4 h-4 mt-1 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="terms" className="ml-2 text-sm text-gray-700">
-                  Concordo com os{" "}
-                  <a href="#" className="text-blue-600 hover:underline">
-                    Termos de Uso
-                  </a>{" "}
-                  e{" "}
-                  <a href="#" className="text-blue-600 hover:underline">
-                    Política de Privacidade
-                  </a>
-                </label>
-              </div>
+              
 
               {/* Botão */}
               <button
@@ -230,12 +206,7 @@ export function Register() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-white/80 [text-shadow:_1px_1px_2px_rgba(0,0,0,0.3)]">
-            © 2024 RetroChat XP. Estilo Windows XP.
-          </p>
-        </div>
+       
       </div>
     </div>
   );

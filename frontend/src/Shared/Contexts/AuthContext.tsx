@@ -60,7 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       onReceiveGroupMessage: (message: Message) => {
-        console.log('📨 AuthContext recebeu mensagem de grupo:', message);
         if (groupMessageHandlerRef.current) {
           groupMessageHandlerRef.current(message);
         }
@@ -99,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     await connectToSignalR(response.token);
     
-    navigate('/chat');
+    navigate('/perfil');
   };
 
   const register = async (userName: string, email: string, password: string) => {
