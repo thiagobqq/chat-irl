@@ -7,6 +7,7 @@ interface Contact {
   status: "Available" | "Busy" | "Away" | "Offline";
   lastMessage?: string;
   avatar?: string;
+  isOnline?: boolean;
 }
 
 interface ContactListProps {
@@ -17,8 +18,9 @@ interface ContactListProps {
 
 export function ContactList({ contacts, selectedContact, onSelectContact }: ContactListProps) {
   const statusToLowercase = (status: string) => {
-    return status.toLowerCase() as "available" | "busy" | "away" | "offline";
+    return status.toLowerCase() as "available" | "busy" | "away" | "offline";    
   };
+ 
 
   return (
     <div className="bg-white/95 rounded-t-lg shadow-xp-window overflow-hidden h-full flex flex-col">
@@ -63,9 +65,9 @@ export function ContactList({ contacts, selectedContact, onSelectContact }: Cont
                     contact.name.charAt(0).toUpperCase()
                   )}
                 </div>
-                {/* Indicador de status */}
                 <div className="absolute -bottom-0 -right-0 bg-white rounded-full p-0.5">
-                  <StatusIndicator status={statusToLowercase(contact.status)} />
+                  
+                  <StatusIndicator status={ contact.isOnline ?  statusToLowercase(contact.status) : "offline" } />
                 </div>
               </div>
 
@@ -78,10 +80,7 @@ export function ContactList({ contacts, selectedContact, onSelectContact }: Cont
                 </p>
               </div>
 
-              {/* Status text (opcional) */}
-              <div className="flex-shrink-0">
-                <StatusIndicator status={statusToLowercase(contact.status)} showLabel={false} />
-              </div>
+             
             </button>
           );
         })}

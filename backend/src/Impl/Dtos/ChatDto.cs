@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using src.Core.Models;
 
 namespace src.Impl.Dtos
 {
@@ -44,6 +45,9 @@ namespace src.Impl.Dtos
         public string Description { get; set; } = string.Empty;
 
         public string ProfilePicture { get; set; } = string.Empty;
+
+        
+        public UserStatus Status { get; set; }
 
         public bool IsOnline { get; set; }
     }

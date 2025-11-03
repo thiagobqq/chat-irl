@@ -55,12 +55,12 @@ namespace src.Web.Controllers
             return Ok(user);
         }
 
-        [HttpGet("all")]
-        public async Task<IActionResult> GetAllUsers()
-        {
-            var users = await _userRepo.GetAllUsers();
-            return Ok(users);
-        }
+        // [HttpGet("all")]
+        // public async Task<IActionResult> GetAllUsers()
+        // {
+        //     var users = await _userRepo.GetAllUsers();
+        //     return Ok(users);
+        // }
 
         [HttpPut("update")]
         public async Task<IActionResult> UpdateUser([FromBody] UserDTO dto)

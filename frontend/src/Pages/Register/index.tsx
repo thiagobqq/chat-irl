@@ -92,7 +92,7 @@ export function Register() {
                     type="text"
                     value={formData.fullName}
                     onChange={(e) => handleChange("fullName", e.target.value)}
-                    placeholder="João da Silva"
+                    placeholder="Apelido"
                     className="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>

@@ -71,6 +71,7 @@ export function Chat() {
           description: u.description || "",
           status: convertStatusToString(u.status),
           avatar: u.profilePicture,
+          isOnline: u.isOnline
         };
       });
     

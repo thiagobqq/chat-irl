@@ -125,6 +125,7 @@ namespace src.infra.Repository
                     Id = u.Id,
                     UserName = u.UserName!,
                     Description = u.Description!,
+                    Status = u.Status,
                     ProfilePicture = u.ProfilePicture,
                     IsOnline = false
                 })

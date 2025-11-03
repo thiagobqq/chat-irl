@@ -98,8 +98,7 @@ export function Home() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8 max-w-6xl">
-      {/* Tabs */}
+    <div className="container mx-auto px-6 max-w-6xl">
       <div className="flex gap-2 mb-6">
         <XPButton
           onClick={() => setActiveTab('conversations')}
@@ -353,10 +352,9 @@ export function Home() {
                         {user.userName}
                       </h3>
                       <p className="text-xs text-gray-600 truncate" style={{ fontFamily: 'Tahoma, sans-serif' }}>
-                        {user.email}
+                        {user.description }
                       </p>
                       
-                      {/* Mensagem de status estilo MSN */}
                       <p className="text-[10px] text-gray-500 italic mt-0.5 truncate">
                         {user.isOnline ? '🟢 Online' : '⚫ Offline'}
                       </p>

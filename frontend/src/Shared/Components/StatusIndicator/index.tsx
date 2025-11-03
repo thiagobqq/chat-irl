@@ -13,9 +13,10 @@ const statusConfig = {
 };
 
 export function StatusIndicator({ status, showLabel = false }: StatusIndicatorProps) {
-  // Converte para lowercase e garante fallback
+  
   const normalizedStatus = (status?.toLowerCase() || 'offline') as Status;
   const config = statusConfig[normalizedStatus] || statusConfig.offline;
+  console.log('StatusIndicator status:', status, 'normalized to:', normalizedStatus);
 
 
   if (showLabel) {

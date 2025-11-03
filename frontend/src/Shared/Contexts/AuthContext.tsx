@@ -17,7 +17,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isConnected: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, register: boolean) => Promise<void>;
   logout: () => void;
   register: (userName: string, email: string, password: string) => Promise<void>;
   setUser: (user: User) => void;
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     messageHandlerRef.current = null;
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, register: boolean) => {
     const response = await apiService.login(email, password);
     
     const userData: User = {
@@ -98,12 +98,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     await connectToSignalR(response.token);
     
-    navigate('/perfil');
+    register ? navigate('/perfil') : navigate('/');
   };
 
   const register = async (userName: string, email: string, password: string) => {
     await apiService.register(userName, email, password);
-    await login(email, password);
+    await login(email, password, true);
   };
 
   const logout = () => {
