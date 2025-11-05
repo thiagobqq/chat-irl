@@ -11,6 +11,7 @@ import { signalRService } from "../../Shared/Services/signalr";
 import { convertStatusToString } from "../../Shared/Utils/mappers";
 import { useLocation } from "react-router-dom"; 
 import type { Contact, Message } from "../../Shared/types/chat";
+import { TypingBubble } from "../../Shared/Components/TypingBubble";
 
 export function Chat() {
   const { user, isConnected } = useAuth();
@@ -19,9 +20,73 @@ export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageText, setMessageText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const typingTimerRef = useRef<number | null>(null);
-   const location = useLocation(); 
+  const typingTimeoutRef = useRef<number | null>(null); 
+  const location = useLocation(); 
+
+  useEffect(() => {
+    if (!signalRService.isConnected()) return;
+
+    const handleNewMessage = (message: Message) => {
+      
+      const isRelevant = selectedContact && (
+        (String(message.senderId) === String(selectedContact.id) && String(message.receiverId) === String(user?.id)) ||
+        (String(message.senderId) === String(user?.id) && String(message.receiverId) === String(selectedContact.id))
+      );
+      
+      if (isRelevant) {
+        setMessages(prev => {
+          const exists = prev.some(m => m.id === message.id);
+          if (exists) return prev;
+          
+          return [...prev, message];
+        });
+        
+        setTimeout(scrollToBottom, 100);
+      }
+    };
+
+    signalRService.updateCallbacks({
+      onReceiveMessage: handleNewMessage,
+      onMessageSent: handleNewMessage,
+      
+      onUserTyping: (userId: string) => {
+        console.log('⌨️ Usuário digitando:', userId);
+        if (selectedContact && userId === selectedContact.id) {
+          setIsTyping(true);
+          
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+          }
+          
+          typingTimeoutRef.current = window.setTimeout(() => {
+            setIsTyping(false);
+          }, 3000);
+          
+          setTimeout(scrollToBottom, 100);
+        }
+      },
+      
+      onUserStoppedTyping: (userId: string) => {
+        console.log('⌨️ Usuário parou de digitar:', userId);
+        if (selectedContact && userId === selectedContact.id) {
+          setIsTyping(false);
+          
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+          }
+        }
+      }
+    });
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [selectedContact?.id, user?.id, isConnected]);
 
   useEffect(() => {
     if (user) {
@@ -32,12 +97,13 @@ export function Chat() {
   useEffect(() => {
     if (selectedContact) {
       loadChatHistory(selectedContact.id);
+      setIsTyping(false); 
     } else {
       setMessages([]);
     }
   }, [selectedContact?.id]);
 
-   useEffect(() => {
+  useEffect(() => {
     const selectedUserId = location.state?.selectedUserId;
     if (selectedUserId && contacts.length > 0) {
       const contact = contacts.find(c => c.id === selectedUserId);
@@ -58,29 +124,26 @@ export function Chat() {
   };
 
   const loadUsers = async () => {
-  try {
-    const users = await apiService.getUsers();
-    
-    const mappedContacts: Contact[] = users
-      .filter((u) => u.id !== user?.id)
-      .map((u) => {
-        
-        return {
+    try {
+      const users = await apiService.getUsers();
+      
+      const mappedContacts: Contact[] = users
+        .filter((u) => u.id !== user?.id)
+        .map((u) => ({
           id: u.id,
           name: u.userName,
           description: u.description || "",
           status: convertStatusToString(u.status),
           avatar: u.profilePicture,
           isOnline: u.isOnline
-        };
-      });
-    
-    setContacts(mappedContacts);
-  } catch (error) {
-    console.error("Erro ao carregar usuários:", error);
-    toast.error("Erro ao carregar usuários");
-  }
-};
+        }));
+      
+      setContacts(mappedContacts);
+    } catch (error) {
+      console.error("Erro ao carregar usuários:", error);
+      toast.error("Erro ao carregar usuários");
+    }
+  };
 
   const loadChatHistory = async (userId: string) => {
     try {
@@ -98,12 +161,13 @@ export function Chat() {
     if (!messageText.trim() || !selectedContact || !isConnected) return;
 
     try {
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current);
+      }
+      await signalRService.stopTyping(selectedContact.id);
+      
       await signalRService.sendMessageToUser(selectedContact.id, messageText);
       setMessageText("");
-      
-      setTimeout(() => {
-        loadChatHistory(selectedContact.id);
-      }, 300);
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
       toast.error("Erro ao enviar mensagem. Tente novamente.");
@@ -122,7 +186,7 @@ export function Chat() {
 
       typingTimerRef.current = window.setTimeout(() => {
         signalRService.stopTyping(selectedContact.id);
-      }, 1000);
+      }, 1500);
     }
   };
 
@@ -175,14 +239,6 @@ export function Chat() {
             >
               {selectedContact ? (
                 <div className="flex flex-col h-full">
-                  {isTyping && (
-                    <div className="px-6 py-2 bg-blue-50 border-b border-blue-100 flex-shrink-0">
-                      <p className="text-blue-600 text-sm">
-                        {selectedContact.name} está digitando...
-                      </p>
-                    </div>
-                  )}
-
                   <div
                     ref={messagesContainerRef}
                     className="flex-1 p-6 space-y-3 overflow-y-auto"
@@ -190,7 +246,7 @@ export function Chat() {
                       background: "linear-gradient(180deg, #F0F8FF 0%, #FFFFFF 100%)",
                     }}
                   >
-                    {messages.length === 0 ? (
+                    {messages.length === 0 && !isTyping ? (
                       <div className="flex items-center justify-center h-full">
                         <p className="text-gray-400 text-center">
                           Nenhuma mensagem ainda.<br />
@@ -198,21 +254,29 @@ export function Chat() {
                         </p>
                       </div>
                     ) : (
-                      messages.map((msg) => {
-                        const isOwn = String(msg.senderId) === String(user?.id);
+                      <>
+                        {messages.map((msg) => {
+                          const isOwn = String(msg.senderId) === String(user?.id);
+                          
+                          return (
+                            <MessageBubble
+                              key={msg.id}
+                              content={msg.message}
+                              isOwnMessage={isOwn}
+                              senderName={isOwn ? "Você" : selectedContact.name}
+                              timestamp={new Date(msg.sentAt)}
+                              avatar={isOwn ? user?.avatar : selectedContact.avatar}
+                            />
+                          );
+                        })}
                         
-                        return (
-                          <MessageBubble
-                            key={msg.id}
-                            content={msg.message}
-                            isOwnMessage={isOwn}
-                            senderName={isOwn ? "Você" : selectedContact.name}
-                            timestamp={new Date(msg.sentAt)}
-                            avatar={isOwn ? user?.avatar : selectedContact.avatar}
-
+                        {isTyping && (
+                          <TypingBubble 
+                            userName={selectedContact.name}
+                            avatar={selectedContact.avatar} 
                           />
-                        );
-                      })
+                        )}
+                      </>
                     )}
                   </div>
 

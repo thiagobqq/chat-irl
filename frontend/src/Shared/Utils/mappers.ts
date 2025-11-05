@@ -1,4 +1,4 @@
-import type { Message } from '../types/chat';
+import type { Group, Message } from '../types/chat';
 
 /**
  * Normaliza mensagem do backend
@@ -128,3 +128,16 @@ export function convertToUI(status?: UserStatusString | UserStatusNumber): Statu
 export function convertFromUI(status: StatusUI): UserStatusString {
   return uiToStatus[status];
 }
+
+export const normalizeGroup = (apiGroup: any): Group => {
+  return {
+    id: apiGroup.id,
+    nome: apiGroup.nome,
+    name: apiGroup.nome, 
+    descricao: apiGroup.descricao,
+    description: apiGroup.descricao,
+    dataCriacao: apiGroup.dataCriacao,
+    createdAt: apiGroup.dataCriacao,
+    users: apiGroup.users || []
+  };
+};

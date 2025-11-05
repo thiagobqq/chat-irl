@@ -10,11 +10,22 @@ export default {
         'segoe': ['"Segoe UI"', 'Verdana', 'Arial', 'sans-serif'],
       },
       animation: {
+        'typing-dot': 'typing 1.4s infinite ease-in-out',
         'float': 'float 20s ease-in-out infinite',        
         'fade-in': 'fadeIn 0.3s ease-in-out',
         
       },
       keyframes: {
+        typing: {
+          '0%, 60%, 100%': { 
+            transform: 'translateY(0)',
+            opacity: '0.7'
+          },
+          '30%': { 
+            transform: 'translateY(-10px)',
+            opacity: '1'
+          },
+        },
         float: {
           '0%, 100%': { transform: 'translate(0, 0)' },
           '33%': { transform: 'translate(30px, -30px) rotate(120deg)' },

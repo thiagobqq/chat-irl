@@ -3,10 +3,12 @@ import { Send, Users, Plus, UserPlus, X } from "lucide-react";
 import toast from 'react-hot-toast';
 import { XPWindow } from "../../Shared/Components/XPWindow";
 import { MessageBubble } from "../../Shared/Components/MessageBubble";
+import { SystemMessage } from "../../Shared/Components/SystemMessage";
 import { useAuth } from "../../Shared/Contexts";
 import { apiService } from "../../Shared/Services/api";
 import { signalRService } from "../../Shared/Services/signalr";
-import type { Message, Group, User } from "../../Shared/types/chat";
+import type { Group, Message, User } from "../../Shared/types/chat";
+import { TypingBubble } from "../../Shared/Components";
 
 export function GroupChat() {
   const { user, isConnected } = useAuth();
@@ -20,50 +22,124 @@ export function GroupChat() {
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const typingTimerRef = useRef<number | null>(null);
+  const systemMessageCounterRef = useRef(0); 
 
-  // Handlers em tempo real (mensagens de grupo, join/leave)
   useEffect(() => {
     if (!isConnected) return;
 
     const handleGroupMessage = (message: Message) => {
       setMessages(prev => {
         const exists = prev.some(m => m.id === message.id);
-        if (exists) return prev;
-        if (selectedRoom && Number(message.groupId) === Number(selectedRoom.id)) {
+        if (exists) {
+          return prev;
+        }
+        
+        const messageGroupId = message.groupId ?? message.group?.id;
+        
+        if (selectedRoom && Number(messageGroupId) === Number(selectedRoom.id)) {
           return [...prev, message];
         }
+        
         return prev;
       });
+      
       setTimeout(scrollToBottom, 50);
+    };
+
+    const createSystemMessage = (type: 'join' | 'leave', userName: string): Message => {
+      systemMessageCounterRef.current += 1;
+      return {
+        id: -systemMessageCounterRef.current, 
+        senderId: 'system',
+        receiverId: undefined,
+        groupId: selectedRoom?.id,
+        message: userName,
+        sentAt: new Date().toISOString(),
+        isRead: true,
+        senderUsername: 'Sistema',
+        isSystemMessage: true,
+        systemMessageType: type
+      };
     };
 
     signalRService.updateCallbacks({
       onReceiveGroupMessage: handleGroupMessage,
-      onUserJoinedGroup: (userId: string, groupId: number) => {
-        if (selectedRoom && Number(groupId) === Number(selectedRoom.id)) {
       
+      onUserJoinedGroup: (userId: string, groupId: number) => {
+        
+        if (selectedRoom && Number(groupId) === Number(selectedRoom.id)) {
+          const member = selectedRoom.users?.find(u => u.id === userId);
+          const userName = member?.userName || 'Alguém';
+          
+          const systemMsg = createSystemMessage('join', userName);
+          setMessages(prev => [...prev, systemMsg]);
+          
+          setTimeout(scrollToBottom, 100);
+          
+          setTimeout(() => {
+            setMessages(prev => prev.filter(m => m.id !== systemMsg.id));
+          }, 30000);
         }
       },
+      
       onUserLeftGroup: (userId: string, groupId: number) => {
+        
         if (selectedRoom && Number(groupId) === Number(selectedRoom.id)) {
+          const member = selectedRoom.users?.find(u => u.id === userId);
+          const userName = member?.userName  || 'Alguém';
+          
+          const systemMsg = createSystemMessage('leave', userName);
+          setMessages(prev => [...prev, systemMsg]);
+          
+          setTimeout(scrollToBottom, 100);
+          
+          setTimeout(() => {
+            setMessages(prev => prev.filter(m => m.id !== systemMsg.id));
+          }, 30000);
         }
+      },
+      
+      onUserTyping: (userId: string) => {
+        setTypingUsers(prev => new Set(prev).add(userId));
+        
+        setTimeout(() => {
+          setTypingUsers(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(userId);
+            return newSet;
+          });
+        }, 3000);
+        
+        setTimeout(scrollToBottom, 100);
+      },
+      
+      onUserStoppedTyping: (userId: string) => {
+        setTypingUsers(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
       }
     });
-  }, [isConnected, selectedRoom?.id]);
 
-  // Carregar grupos
+    return () => {
+    };
+  }, [isConnected, selectedRoom?.id, selectedRoom?.users]);
+
   useEffect(() => {
     if (user) {
       loadGroups();
     }
   }, [user]);
 
-  // Carregar mensagens e entrar/sair do grupo quando selecionar
   useEffect(() => {
     if (selectedRoom) {
       loadGroupMessages(selectedRoom.id);
       signalRService.joinGroup(selectedRoom.id);
+      setTypingUsers(new Set());
 
       return () => {
         signalRService.leaveGroup(selectedRoom.id);
@@ -98,6 +174,7 @@ export function GroupChat() {
       setMessages(messagesWithGroupId);
       setTimeout(scrollToBottom, 50);
     } catch (error) {
+      console.error('❌ Erro ao carregar mensagens:', error);
       toast.error("Erro ao carregar mensagens do grupo");
     }
   };
@@ -107,6 +184,7 @@ export function GroupChat() {
       const users = await apiService.getUsers();
       setAllUsers(users.filter((u) => u.id !== user?.id));
     } catch (error) {
+      console.error('❌ Erro ao carregar usuários:', error);
       toast.error("Erro ao carregar usuários");
     }
   };
@@ -148,6 +226,7 @@ export function GroupChat() {
       closeCreateGroupModal();
       toast.success("Grupo criado com sucesso!", { id: toastId });
     } catch (error: any) {
+      console.error('❌ Erro ao criar grupo:', error);
       toast.error(error.message || "Erro ao criar grupo", { id: toastId });
     } finally {
       setIsCreating(false);
@@ -159,11 +238,31 @@ export function GroupChat() {
     if (!messageText.trim() || !selectedRoom || !isConnected) return;
 
     try {
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current);
+      }
+      await signalRService.stopTyping(selectedRoom.id.toString());
+      
       await signalRService.sendMessageToGroup(selectedRoom.id, messageText);
       setMessageText("");
-      // Sem reload — a mensagem chega pelo onReceiveGroupMessage
     } catch (error) {
       toast.error("Erro ao enviar mensagem. Tente novamente.");
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessageText(e.target.value);
+
+    if (selectedRoom && isConnected) {
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current);
+      }
+
+      signalRService.startTyping(selectedRoom.id.toString());
+
+      typingTimerRef.current = window.setTimeout(() => {
+        signalRService.stopTyping(selectedRoom.id.toString());
+      }, 1500);
     }
   };
 
@@ -187,7 +286,6 @@ export function GroupChat() {
         )}
 
         <div className="grid lg:grid-cols-[320px_1fr] gap-4 h-full">
-          {/* Lista de Grupos */}
           <div className="h-full overflow-hidden flex flex-col bg-white/85 backdrop-blur-md border border-white/50 rounded-lg shadow-glass p-3">
             <div className="flex items-center justify-between mb-4 flex-shrink-0">
               <h3 className="text-sm font-bold text-blue-800">Grupos</h3>
@@ -233,12 +331,11 @@ export function GroupChat() {
             </div>
           </div>
 
-          {/* Área de Chat */}
           <div className="h-full overflow-hidden">
             <XPWindow
               title={
                 selectedRoom
-                  ? selectedRoom.nome || selectedRoom.name
+                  ? selectedRoom.nome!
                   : "Selecione um grupo"
               }
               icon={selectedRoom ? <Users className="w-4 h-4 text-white" /> : null}
@@ -249,7 +346,7 @@ export function GroupChat() {
                     ref={messagesContainerRef}
                     className="flex-1 p-6 space-y-3 overflow-y-auto bg-gradient-to-b from-[#F0FFF4] to-white"
                   >
-                    {messages.length === 0 ? (
+                    {messages.length === 0 && typingUsers.size === 0 ? (
                       <div className="flex items-center justify-center h-full">
                         <p className="text-gray-400 text-center">
                           Nenhuma mensagem ainda.<br />
@@ -257,18 +354,46 @@ export function GroupChat() {
                         </p>
                       </div>
                     ) : (
-                      messages.map((msg) => {
-                        const isOwn = String(msg.senderId) === String(user?.id);
-                        return (
-                          <MessageBubble
-                            key={msg.id}
-                            content={msg.message}
-                            isOwnMessage={isOwn}
-                            senderName={isOwn ? "Você" : msg.senderUsername}
-                            timestamp={new Date(msg.sentAt)}
-                          />
-                        );
-                      })
+                      <>
+                        {messages.map((msg) => {
+                          if (msg.isSystemMessage && msg.systemMessageType) {
+                            return (
+                              <SystemMessage
+                                key={msg.id}
+                                type={msg.systemMessageType}
+                                userName={msg.message}
+                                timestamp={new Date(msg.sentAt)}
+                              />
+                            );
+                          }
+
+                          const isOwn = String(msg.senderId) === String(user?.id);
+                          return (
+                            <MessageBubble
+                              key={msg.id}
+                              content={msg.message}
+                              isOwnMessage={isOwn}
+                              senderName={isOwn ? "Você" : (msg.senderUsername || 'Anônimo')}
+                              timestamp={new Date(msg.sentAt)}
+                            />
+                          );
+                        })}
+                        
+                        {typingUsers.size > 0 && (
+                          <div className="space-y-2">
+                            {Array.from(typingUsers).map(userId => {
+                              const member = selectedRoom?.users?.find(u => u.id === userId);
+                              return member ? (
+                                <TypingBubble 
+                                  key={userId} 
+                                  userName={member.userName || 'Alguém'} 
+                                  avatar={member.profilePicture}
+                                />
+                              ) : null;
+                            })}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -279,7 +404,7 @@ export function GroupChat() {
                     <div className="flex gap-2">
                       <input
                         value={messageText}
-                        onChange={(e) => setMessageText(e.target.value)}
+                        onChange={handleInputChange}
                         placeholder="Digite sua mensagem..."
                         disabled={!isConnected}
                         className="flex-1 px-4 py-2 border-2 border-blue-300 focus:border-blue-500 rounded-lg focus:outline-none transition-colors disabled:bg-gray-100"
@@ -312,11 +437,9 @@ export function GroupChat() {
         </div>
       </div>
 
-      {/* Dialog Criar Grupo */}
       {showCreateDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white/95 rounded-t-lg shadow-xp-window overflow-hidden w-full max-w-md max-h-[90vh] flex flex-col">
-            {/* Title bar */}
             <div className="bg-gradient-to-b from-[#0997FF] to-[#0058B8] px-3 py-2 border-b border-[#003C8C] flex items-center justify-between flex-shrink-0">
               <span className="text-white font-semibold text-sm flex items-center gap-2">
                 <UserPlus className="w-4 h-4" />
@@ -330,7 +453,6 @@ export function GroupChat() {
               </button>
             </div>
 
-            {/* Conteúdo */}
             <form onSubmit={handleCreateGroup} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">

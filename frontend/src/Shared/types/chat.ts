@@ -7,7 +7,7 @@ export interface User {
   userName: string;
   email: string;
   isOnline?: boolean;
-  status?: UserStatusNumber; // Backend envia como número
+  status?: UserStatusNumber;
   description?: string;
   profilePicture?: string;
   backgroundPicture?: string;
@@ -28,11 +28,17 @@ export interface Message {
   senderId: string;
   receiverId?: string;
   groupId?: number;
-  senderUsername: string;
+  senderUsername?: string;
   receiverUsername?: string;
   message: string;
   sentAt: string;
-  isRead: boolean;
+  isRead?: boolean;
+  group?: {
+    id: number;
+    name: string;
+  };
+  isSystemMessage?: boolean;
+  systemMessageType?: 'join' | 'leave' | 'info';
 }
 
 export interface Conversation {
@@ -48,8 +54,11 @@ export interface Conversation {
 
 export interface Group {
   id: number;
-  nome: string;
-  name: string;
-  description: string;
-  users: string[];
+  nome?: string;
+  name?: string;
+  descricao?: string;
+  description?: string;
+  dataCriacao?: string;
+  createdAt?: string;
+  users: User[];
 }

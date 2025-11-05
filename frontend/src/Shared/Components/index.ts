@@ -7,3 +7,6 @@ export * from './ContactList';
 export * from './MessageBubble';
 export * from './StatusIndicator';
 export * from './ProtectedRoute';
+export * from './TypingIndicator';
+export * from './TypingBubble';
+export * from './SystemMessage';

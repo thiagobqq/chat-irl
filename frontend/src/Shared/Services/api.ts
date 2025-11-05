@@ -1,5 +1,5 @@
 import type { User, Message, Conversation, Group } from '../types/chat';
-import { normalizeMessages } from '../Utils/mappers';
+import { normalizeGroup, normalizeMessages } from '../Utils/mappers';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost';
 
@@ -200,9 +200,21 @@ class ApiService {
 
   // ==================== GROUPS ====================
   async getMyGroups(): Promise<Group[]> {
-    const data = await this.fetchWithAuth('/group/meus-grupos');
-    return Array.isArray(data) ? data : [];
+  try {
+    const response = await this.fetchWithAuth('/group/meus-grupos');
+    
+    const data = response.data || response;
+    
+    if (!Array.isArray(data)) {
+      console.error('❌ Resposta não é um array:', data);
+      return [];
+    }
+    
+    return data.map((group: any) => normalizeGroup(group));
+  } catch (error) {
+    return []; 
   }
+}
 
   async createGroup(name: string, description: string, users: string[]): Promise<Group> {
     return this.fetchWithAuth('/group', {
