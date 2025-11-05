@@ -47,18 +47,10 @@ namespace src.infra.Repository
                 return false;
             }
 
-            if (!string.IsNullOrEmpty(dto.Username))
-                user.UserName = dto.Username;
-
-            if (!string.IsNullOrEmpty(dto.ProfilePicture))
-                user.ProfilePicture = dto.ProfilePicture;
-
-            if (!string.IsNullOrEmpty(dto.BackgroundPicture))
-                user.BackgroundPicture = dto.BackgroundPicture;
-
-            if (!string.IsNullOrEmpty(dto.Description))
-                user.Description = dto.Description;
-
+            user.UserName = dto.Username;
+            user.ProfilePicture = dto.ProfilePicture;
+            user.BackgroundPicture = dto.BackgroundPicture;
+            user.Description = dto.Description;
             user.Status = dto.Status;
 
             return await _context.SaveChangesAsync() > 0;
