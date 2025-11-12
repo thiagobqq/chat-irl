@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MessageCircle, Mail, Lock, User, UserPlus, Check } from "lucide-react";
+import { Mail, Lock, User, UserPlus, Check } from "lucide-react";
 import { useAuth } from "../../Shared/Contexts";
 
 export function Register() {
   const { register } = useAuth();
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -22,7 +22,7 @@ export function Register() {
     e.preventDefault();
     setError("");
 
-    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
       setError("Preencha todos os campos");
       return;
     }
@@ -46,7 +46,7 @@ export function Register() {
     setIsLoading(true);
 
     try {
-      await register(formData.fullName, formData.email, formData.password);
+      await register(formData.name, formData.email, formData.password);
     } catch (err: any) {
       setError(err.message || "Erro ao criar conta");
     } finally {
@@ -90,8 +90,8 @@ export function Register() {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    value={formData.fullName}
-                    onChange={(e) => handleChange("fullName", e.target.value)}
+                    value={formData.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
                     placeholder="Apelido"
                     className="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
                   />

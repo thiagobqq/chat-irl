@@ -68,25 +68,19 @@ namespace src.Web.Controllers
                 if (!ModelState.IsValid)
                     throw new Exception("Invalid payload");
 
-                var response = await _authService.Register(_userManager, _signinManager, request);
-                if (response == null)
+                var response = await _authService.Register(_userManager, request);
+                
+                if (!response)
                     throw new Exception("Failed to create user");
-
-
-                return Ok(new RegisterResponseDto
+                return Ok(new
                 {
-                    Email = response.Email,
-                    Name = response.Name,
-                    Token = response.Token,
-                    Id = response.Id
+                    message = "Registro realizado com sucesso",
                 });
-
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
-
         }
 
         [HttpPost("login")]

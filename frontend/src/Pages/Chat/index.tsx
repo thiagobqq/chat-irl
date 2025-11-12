@@ -53,7 +53,6 @@ export function Chat() {
       onMessageSent: handleNewMessage,
       
       onUserTyping: (userId: string) => {
-        console.log('⌨️ Usuário digitando:', userId);
         if (selectedContact && userId === selectedContact.id) {
           setIsTyping(true);
           
@@ -70,7 +69,6 @@ export function Chat() {
       },
       
       onUserStoppedTyping: (userId: string) => {
-        console.log('⌨️ Usuário parou de digitar:', userId);
         if (selectedContact && userId === selectedContact.id) {
           setIsTyping(false);
           

@@ -11,6 +11,6 @@ namespace src.Core.Interfaces
     public interface IAuthService
     {
         Task<AuthResponseDTO> Login(UserManager<AppUser> userManager, SignInManager<AppUser> signinManager, AuthDTO request);
-        Task<RegisterResponseDto> Register(UserManager<AppUser> userManager, SignInManager<AppUser> signinManager, RegisterDto request);
+        Task<bool> Register(UserManager<AppUser> userManager, RegisterDto request);
     }
 }
