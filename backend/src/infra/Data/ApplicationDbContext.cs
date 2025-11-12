@@ -10,15 +10,27 @@ namespace src.infra.Data
         public DbSet<Group> Groups { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<GroupMessage> GroupMessages { get; set; }
+        public DbSet<UserGroup> UserGroups { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<AppUser>()
-                .HasMany(u => u.Groups)
-                .WithMany(s => s.Users)
-                .UsingEntity(j => j.ToTable("UserGroups"));
+            modelBuilder.Entity<UserGroup>()
+                .HasKey(ug => new { ug.AppUserId, ug.GroupId });
+
+            modelBuilder.Entity<UserGroup>()
+                .HasOne(ug => ug.AppUser)
+                .WithMany(u => u.UserGroups)
+                .HasForeignKey(ug => ug.AppUserId);
+
+            modelBuilder.Entity<UserGroup>()
+                .HasOne(ug => ug.Group)
+                .WithMany(g => g.UserGroups)
+                .HasForeignKey(ug => ug.GroupId);
+
+            modelBuilder.Entity<UserGroup>()
+                .HasIndex(ug => new { ug.GroupId, ug.IsAdmin });
 
             modelBuilder.Entity<ChatMessage>()
                 .HasOne(m => m.Sender)

@@ -13,6 +13,7 @@ namespace src.Core.Models
         public string Nome { get; set; } = String.Empty;
         public string? Descricao { get; set; }
         public DateTime DataCriacao { get; set; }
-        public ICollection<AppUser> Users { get; set; } = new List<AppUser>();
+        
+        public ICollection<UserGroup> UserGroups { get; set; } = new List<UserGroup>();
     }
 }

@@ -47,7 +47,7 @@ namespace src.Impl.Service
             };
         }
 
-        public async Task<RegisterResponseDto> Register(UserManager<AppUser> userManager, SignInManager<AppUser> signinManager, RegisterDto request)
+        public async Task<bool> Register(UserManager<AppUser> userManager, SignInManager<AppUser> signinManager, RegisterDto request)
         {
             var user = await userManager.Users.FirstOrDefaultAsync(x => x.Email == request.Email!.ToLower());
             if (user != null)
@@ -68,13 +68,7 @@ namespace src.Impl.Service
 
             await _dbContext.SaveChangesAsync();
 
-            return new RegisterResponseDto
-            {
-                Email = newUser.Email,
-                Name = newUser.UserName,
-                
-                Token = await _tokenService.createToken(newUser)
-            };
+            return true;
         }
 
     }

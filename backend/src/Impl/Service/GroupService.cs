@@ -66,6 +66,9 @@ namespace src.Impl.Service
             var isInGroup = await _groupRepository.UserIsInGroupAsync(groupId, requesterId);
             if (!isInGroup)
                 throw new Exception("Apenas membros podem adicionar novos membros");
+            var isAdmin = await _groupRepository.IsUserGroupAdmin(groupId, requesterId);
+            if (!isAdmin)
+                throw new Exception("Voce nao tem permissão para isso");
 
             return await _groupRepository.AddMemberToGroupAsync(groupId, userId);
         }
@@ -75,11 +78,16 @@ namespace src.Impl.Service
             var isInGroup = await _groupRepository.UserIsInGroupAsync(groupId, requesterId);
             if (!isInGroup)
                 throw new Exception("Apenas membros podem remover membros");
-
-            if (userId == requesterId)
-                throw new Exception("Use o método de sair do grupo");
+            var isAdmin = await _groupRepository.IsUserGroupAdmin(groupId, requesterId);
+            if (!isAdmin && userId != requesterId)
+                throw new Exception("Voce nao tem permissão para isso");
 
             return await _groupRepository.RemoveMemberFromGroupAsync(groupId, userId);
+        }
+
+        public async Task<List<GroupMemberDto>> ListMembersGroupAsync(int groupId)
+        {
+            return await _groupRepository.ListMembersGroup(groupId);            
         }
     }
 }
