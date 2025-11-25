@@ -11,7 +11,7 @@ namespace src.Core.Interfaces
     {
         Task<Group> CreateGroupAsync(CreateGroupDto dto, AppUser currentUser);
         Task<Group?> GetGroupByIdAsync(int groupId);
-        Task<List<Group>> GetUserGroupsAsync(string userId);
+        Task<List<GroupDto>> GetUserGroupsAsync(string userId);
         Task<GroupMessage> CreateGroupMessageAsync(GroupMessage message);
         Task<List<GroupMessage>> GetGroupMessagesAsync(int groupId);
 

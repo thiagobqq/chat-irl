@@ -24,21 +24,21 @@ namespace src.infra.Repository
 
         public async Task<Group> CreateGroupAsync(CreateGroupDto dto, AppUser currentUser)
         {
+            var currentUserId = currentUser.Id;
             
             var group = new Group
             {
                 Nome = dto.Name,
                 Descricao = dto.Descricao,
-                DataCriacao = DateTime.UtcNow,
-                UserGroups = new List<UserGroup>() 
+                DataCriacao = DateTime.UtcNow
             };
 
             _context.Groups.Add(group);
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync();
 
             var creatorRelation = new UserGroup
             {
-                AppUserId = currentUser.Id,
+                AppUserId = currentUserId, 
                 GroupId = group.Id,
                 IsAdmin = true,
                 JoinedAt = DateTime.UtcNow
@@ -48,16 +48,17 @@ namespace src.infra.Repository
 
             if (dto.Users != null && dto.Users.Any())
             {
-                var validUserIds = dto.Users
-                    .Where(id => !string.IsNullOrWhiteSpace(id) && id != currentUser.Id)
-                    .Distinct()
-                    .ToList();
+                    var validUserIds = dto.Users
+                        .Where(id => !string.IsNullOrWhiteSpace(id) && id != currentUserId)
+                        .Distinct()
+                        .ToList();
 
-                foreach (var userId in validUserIds)
-                {
-                    var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+                    var existingUserIds = await _context.Users
+                        .Where(u => validUserIds.Contains(u.Id))
+                        .Select(u => u.Id)
+                        .ToListAsync();
 
-                    if (userExists)
+                    foreach (var userId in existingUserIds)
                     {
                         var memberRelation = new UserGroup
                         {
@@ -69,19 +70,11 @@ namespace src.infra.Repository
 
                         _context.Set<UserGroup>().Add(memberRelation);
                     }
-                    else
-                    {
-                        Console.WriteLine($"Usuário {userId} não encontrado");
-                    }
                 }
+
+                await _context.SaveChangesAsync();
+                return group;
             }
-
-            await _context.SaveChangesAsync();
-
-            return await _context.Groups
-                .AsNoTracking()
-                .FirstAsync(g => g.Id == group.Id);
-        }
 
         public async Task<bool> AddMemberToGroupAsync(int groupId, string userId)
         {
@@ -146,6 +139,7 @@ namespace src.infra.Repository
                 .Where(ug => ug.GroupId == groupId)
                 .Select(ug => new GroupMemberDto
                 {
+                    Id = ug.AppUser!.Id,
                     Username = ug.AppUser.UserName!,
                     Description = ug.AppUser.Description,
                     ProfilePicture = ug.AppUser.ProfilePicture,
@@ -159,14 +153,28 @@ namespace src.infra.Repository
             return members;
         }
 
-        public async Task<List<Group>> GetUserGroupsAsync(string userId)
+        public async Task<List<GroupDto>> GetUserGroupsAsync(string userId)
+{
+    return await _context.Set<UserGroup>()
+        .Where(ug => ug.AppUserId == userId)
+        .OrderByDescending(ug => ug.Group!.DataCriacao)
+        .Select(ug => new GroupDto
         {
-            return await _context.Set<UserGroup>()
-                .Where(ug => ug.AppUserId == userId)
-                .Select(ug => ug.Group)
-                .OrderByDescending(g => g.DataCriacao)
-                .ToListAsync();
-        }
+            Id = ug.Group!.Id,
+            Name = ug.Group.Nome,
+            DataCriacao = ug.Group.DataCriacao,
+            Members = ug.Group.UserGroups.Select(member => new GroupMemberDto
+            {
+                Id = member.AppUser!.Id,
+                Username = member.AppUser.UserName!,
+                Description = member.AppUser.Description,
+                ProfilePicture = member.AppUser.ProfilePicture,
+                Status = member.AppUser.Status,
+                IsAdmin = member.IsAdmin
+            }).ToList()
+        })
+        .ToListAsync();
+}
 
         public async Task<Group?> GetGroupByIdAsync(int groupId)
         {
@@ -210,6 +218,7 @@ namespace src.infra.Repository
                 .Where(ug => ug.GroupId == groupId && ug.IsAdmin)
                 .Select(ug => new GroupMemberDto
                 {
+                    Id = ug.AppUser!.Id,
                     Username = ug.AppUser.UserName!,
                     Description = ug.AppUser.Description,
                     ProfilePicture = ug.AppUser.ProfilePicture,

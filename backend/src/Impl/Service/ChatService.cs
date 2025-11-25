@@ -2,6 +2,7 @@ using src.Core.Interfaces;
 using src.Core.Models;
 using Microsoft.AspNetCore.Identity;
 using src.Impl.Dtos;
+using System.Collections.Concurrent; 
 
 namespace src.Impl.Service
 {
@@ -9,7 +10,8 @@ namespace src.Impl.Service
     {
         private readonly IChatMessageRepository _chatRepository;
         private readonly UserManager<AppUser> _userManager;
-        private static readonly Dictionary<string, string> _userConnections = new();
+        
+        private static readonly ConcurrentDictionary<string, string> _userConnections = new();
 
         public ChatService(IChatMessageRepository chatRepository, UserManager<AppUser> userManager)
         {
@@ -65,7 +67,6 @@ namespace src.Impl.Service
         {
             var users = await _chatRepository.GetAvailableUsersAsync(currentUserId);
             
-            // Atualizar status online
             foreach (var user in users)
             {
                 user.IsOnline = IsUserOnline(user.Id);
@@ -74,15 +75,14 @@ namespace src.Impl.Service
             return users;
         }
 
-        // Gerenciamento de conexões
         public void AddUserConnection(string userId, string connectionId)
         {
-            _userConnections[userId] = connectionId;
+            _userConnections.AddOrUpdate(userId, connectionId, (key, oldValue) => connectionId);
         }
 
         public void RemoveUserConnection(string userId)
         {
-            _userConnections.Remove(userId);
+            _userConnections.TryRemove(userId, out _);
         }
 
         public string GetUserConnection(string userId)
@@ -92,7 +92,7 @@ namespace src.Impl.Service
 
         public List<string> GetOnlineUsers()
         {
-            return _userConnections.Keys.ToList();
+            return _userConnections.Keys.ToArray().ToList();
         }
 
         public bool IsUserOnline(string userId)

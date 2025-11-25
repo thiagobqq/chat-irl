@@ -52,6 +52,15 @@ export interface Conversation {
   isOnline: boolean;
 }
 
+export interface GroupMember {
+  id: string;
+  username: string;
+  isAdmin: boolean;
+  profilePicture?: string;
+  description?: string;
+  status?: number;
+}
+
 export interface Group {
   id: number;
   nome?: string;
@@ -60,5 +69,6 @@ export interface Group {
   description?: string;
   dataCriacao?: string;
   createdAt?: string;
+  members?: GroupMember[];
   users: User[];
 }

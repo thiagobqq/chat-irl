@@ -1,4 +1,4 @@
-import type { User, Message, Conversation, Group } from '../types/chat';
+import type { User, Message, Conversation, Group, GroupMember } from '../types/chat';
 import { normalizeGroup, normalizeMessages } from '../Utils/mappers';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost';
@@ -200,21 +200,33 @@ class ApiService {
 
   // ==================== GROUPS ====================
   async getMyGroups(): Promise<Group[]> {
-  try {
-    const response = await this.fetchWithAuth('/group/meus-grupos');
-    
-    const data = response.data || response;
-    
-    if (!Array.isArray(data)) {
-      console.error('❌ Resposta não é um array:', data);
-      return [];
+    try {
+      const response = await this.fetchWithAuth('/group/meus-grupos');
+      
+      const data = response.data || response;
+      
+      if (!Array.isArray(data)) {
+        console.error('❌ Resposta não é um array:', data);
+        return [];
+      }
+      
+      return data.map((group: any) => ({
+        ...group, 
+        id: group.id,
+        
+        name: group.name || group.nome || 'Sem Nome',
+        nome: group.name || group.nome || 'Sem Nome',
+        
+        members: group.members || [],
+        
+        users: group.members || group.users || [] 
+      }));
+      
+    } catch (error) {
+      console.error("Erro ao buscar grupos:", error);
+      return []; 
     }
-    
-    return data.map((group: any) => normalizeGroup(group));
-  } catch (error) {
-    return []; 
   }
-}
 
   async createGroup(name: string, description: string, users: string[]): Promise<Group> {
     return this.fetchWithAuth('/group', {
@@ -242,17 +254,35 @@ class ApiService {
   }
 
   async addMemberToGroup(groupId: number, userId: string) {
-    return this.fetchWithAuth(`/group/${groupId}/add-member`, {
-      method: 'POST',
-      body: JSON.stringify({ userId }),
+    return this.fetchWithAuth(`/group/${groupId}/add/${userId}`, {
+      method: 'POST'
     });
   }
 
   async removeMemberFromGroup(groupId: number, userId: string) {
-    return this.fetchWithAuth(`/group/${groupId}/remove-member`, {
-      method: 'POST',
-      body: JSON.stringify({ userId }),
+    return this.fetchWithAuth(`/group/${groupId}/remove/${userId}`, {
+      method: 'POST'
     });
+  }
+
+  async getGroupMembers(groupId: number): Promise<GroupMember[]> {
+    const data = await this.fetchWithAuth(`/group/${groupId}/members`);
+    return Array.isArray(data) ? data : [];
+  }
+
+   async promoteToAdmin(groupId: number, userId: string) {
+    return this.fetchWithAuth(`/group/${groupId}/promote/${userId}`, {
+      method: 'POST'
+    });
+  }
+
+  async demoteFromAdmin(groupId: number, userId: string) {
+    return this.fetchWithAuth(`/group/${groupId}/demote/${userId}`, {
+      method: 'POST'
+    });
+  }
+  async removeMember(groupId: number, userId: string) {
+    return this.removeMemberFromGroup(groupId, userId);
   }
 }
 

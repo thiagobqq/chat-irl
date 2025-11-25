@@ -25,7 +25,7 @@ namespace src.Impl.Service
             return await _groupRepository.CreateGroupAsync(dto, currentUser);
         }
 
-        public async Task<List<Group>> GetUserGroupsAsync(string userId)
+        public async Task<List<GroupDto>> GetUserGroupsAsync(string userId)
         {
             return await _groupRepository.GetUserGroupsAsync(userId);
         }
@@ -83,6 +83,35 @@ namespace src.Impl.Service
                 throw new Exception("Voce nao tem permissão para isso");
 
             return await _groupRepository.RemoveMemberFromGroupAsync(groupId, userId);
+        }
+
+        public async Task<bool> PromoteToAdminAsync(int groupId, string userId, string requesterId)
+        {
+            var isInGroup = await _groupRepository.UserIsInGroupAsync(groupId, requesterId);
+            if (!isInGroup)
+                throw new Exception("Apenas membros podem promover outros membros");
+            var isAdmin = await _groupRepository.IsUserGroupAdmin(groupId, requesterId);
+            if (!isAdmin)
+                throw new Exception("Voce nao tem permissão para isso");
+
+            return await _groupRepository.PromoteToAdminAsync(groupId, userId);
+        }
+
+        public async Task<bool> DemoteFromAdminAsync(int groupId, string userId, string requesterId)
+        {
+            var isInGroup = await _groupRepository.UserIsInGroupAsync(groupId, requesterId);
+            if (!isInGroup)
+                throw new Exception("Apenas membros podem demover outros membros");
+            var isAdmin = await _groupRepository.IsUserGroupAdmin(groupId, requesterId);
+            if (!isAdmin)
+                throw new Exception("Voce nao tem permissão para isso");
+
+            return await _groupRepository.DemoteFromAdminAsync(groupId, userId);
+        }
+
+        public async Task<List<GroupMemberDto>> ListGroupAdminsAsync(int groupId)
+        {
+            return await _groupRepository.ListGroupAdminsAsync(groupId);            
         }
 
         public async Task<List<GroupMemberDto>> ListMembersGroupAsync(int groupId)

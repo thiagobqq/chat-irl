@@ -14,4 +14,14 @@ namespace src.Impl.Dtos
         public List<string> Users { get; set; } = new List<string>();
 
     }
+
+    public class GroupDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Descricao { get; set; }
+        public DateTime DataCriacao { get; set; }
+
+        public List<GroupMemberDto> Members { get; set; } = new List<GroupMemberDto>();
+    }
 }
