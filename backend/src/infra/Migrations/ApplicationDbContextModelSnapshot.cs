@@ -8,7 +8,7 @@ using src.infra.Data;
 
 #nullable disable
 
-namespace backend.infra.Migrations
+namespace backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -21,21 +21,6 @@ namespace backend.infra.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("AppUserGroup", b =>
-                {
-                    b.Property<int>("GroupsId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UsersId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("GroupsId", "UsersId");
-
-                    b.HasIndex("UsersId");
-
-                    b.ToTable("UserGroups", (string)null);
-                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -168,6 +153,27 @@ namespace backend.infra.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("UserGroup", b =>
+                {
+                    b.Property<string>("AppUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("GroupId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("AppUserId", "GroupId");
+
+                    b.HasIndex("GroupId", "IsAdmin");
+
+                    b.ToTable("UserGroups");
                 });
 
             modelBuilder.Entity("src.Core.Models.AppUser", b =>
@@ -348,21 +354,6 @@ namespace backend.infra.Migrations
                     b.ToTable("GroupMessages");
                 });
 
-            modelBuilder.Entity("AppUserGroup", b =>
-                {
-                    b.HasOne("src.Core.Models.Group", null)
-                        .WithMany()
-                        .HasForeignKey("GroupsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("src.Core.Models.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -414,6 +405,25 @@ namespace backend.infra.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("UserGroup", b =>
+                {
+                    b.HasOne("src.Core.Models.AppUser", "AppUser")
+                        .WithMany("UserGroups")
+                        .HasForeignKey("AppUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("src.Core.Models.Group", "Group")
+                        .WithMany("UserGroups")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppUser");
+
+                    b.Navigation("Group");
+                });
+
             modelBuilder.Entity("src.Core.Models.ChatMessage", b =>
                 {
                     b.HasOne("src.Core.Models.AppUser", "Receiver")
@@ -450,6 +460,16 @@ namespace backend.infra.Migrations
                     b.Navigation("Group");
 
                     b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("src.Core.Models.AppUser", b =>
+                {
+                    b.Navigation("UserGroups");
+                });
+
+            modelBuilder.Entity("src.Core.Models.Group", b =>
+                {
+                    b.Navigation("UserGroups");
                 });
 #pragma warning restore 612, 618
         }

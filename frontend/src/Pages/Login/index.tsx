@@ -1,7 +1,20 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MessageCircle, Mail, Lock, LogIn } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import { useAuth } from "../../Shared/Contexts";
+import toast from "react-hot-toast";
+
+const RetroIcon = ({ src, fallback: Fallback, className }: { src: string; fallback: any; className?: string }) => {
+  const [error, setError] = useState(false);
+  if (error) return <Fallback className={className} />;
+  return <img src={src} className={className} style={{ imageRendering: "pixelated" }} onError={() => setError(true)} alt="" />;
+};
+
+const ICONS = {
+  MSN: "https://win98icons.alexmeub.com/icons/png/msn_messenger-0.png",
+  MAIL: "https://win98icons.alexmeub.com/icons/png/mail-2.png",
+  LOCK: "https://win98icons.alexmeub.com/icons/png/lock-0.png",
+};
 
 export function Login() {
   const { login } = useAuth();
@@ -14,145 +27,105 @@ export function Login() {
     e.preventDefault();
     setError("");
 
-    if (!email || !password) {
-      setError("Preencha todos os campos");
-      return;
-    }
-
-    if (!email.includes("@")) {
-      setError("Email inválido");
-      return;
-    }
+    if (!email || !password) return setError("Preencha todos os campos");
+    if (!email.includes("@")) return setError("Email inválido");
 
     setIsLoading(true);
-
     try {
-      await login(email, password);
+      await login(email, password, false);
     } catch (err: any) {
-      setError(err.message || "Erro ao fazer login");
+      setError(err.message || "Usuário ou senha incorretos");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden font-segoe flex items-center justify-center">
-      {/* Background animado */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] opacity-50">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(158,255,46,0.15)_0%,transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(0,120,215,0.15)_0%,transparent_50%)]" />
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#008080] flex items-center justify-center pt-20 p-4 font-tahoma">
+      {/* Fundo Bliss sutil */}
+      <div className="absolute inset-0 opacity-30" style={{ background: "url(https://win98icons.alexmeub.com/images/windows-xp-bliss.jpg) center/cover" }} />
 
-      {/* Card de Login */}
-      <div className="relative z-10 w-full max-w-md mx-4">
-        
-
-        {/* Janela XP */}
-        <div className="bg-white/95 rounded-t-lg shadow-xp-window overflow-hidden">
-          {/* Title bar */}
-          <div className="bg-gradient-to-b from-[#0997FF] to-[#0058B8] px-3 py-2 border-b border-[#003C8C]">
-            <span className="text-white font-semibold text-sm flex items-center gap-2">
-              <LogIn className="w-4 h-4" />
-              Fazer Login
-            </span>
+      <div className="relative w-full max-w-md">
+        <div className="bg-[#ECE9D8] border-2 border-white outline outline-1 outline-[#0055EA] rounded shadow-xl">
+          {/* Title bar azul */}
+          <div className="bg-gradient-to-r from-[#0058EE] to-[#3F93FF] px-3 py-1.5 flex items-center justify-between select-none">
+            <div className="flex items-center gap-2">
+              <img src="/icons/profile.png" alt="Login" className="w-5 h-5" style={{ imageRendering: "pixelated" }} />
+              <span className="text-white font-bold text-sm">Entrar</span>
+            </div>
+            <div className="flex gap-1">
+              <button className="w-5 h-5 bg-[#C0C0C0] border border-white flex items-center justify-center text-xs hover:bg-gray-300">_</button>
+              <button className="w-5 h-5 bg-[#C0C0C0] border border-white flex items-center justify-center text-xs hover:bg-gray-300">□</button>
+              <button className="w-5 h-5 bg-[#D7432E] border border-white flex items-center justify-center text-white text-xs hover:bg-red-600">×</button>
+            </div>
           </div>
 
-          {/* Conteúdo */}
-          <div className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email
+          {/* Corpo */}
+          <div className="p-6 space-y-6">
+            <div className="text-center">
+              <img src="/icons/profile.png" alt="Profile" className="w-16 h-16 mx-auto mb-4" style={{ imageRendering: "pixelated" }} />
+              <h1 className="text-xl font-bold text-[#003399]">Fazer login</h1>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-800 flex items-center gap-2">
+                  <RetroIcon src={ICONS.MAIL} fallback={Mail} className="w-4 h-4" />
+                  E-mail
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  className="w-full px-3 py-2 border border-gray-500 shadow-inner focus:outline-none focus:border-[#0055EA] text-sm bg-white"
+                  autoFocus
+                />
               </div>
 
-              {/* Senha */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-800 flex items-center gap-2">
+                  <RetroIcon src={ICONS.LOCK} fallback={Lock} className="w-4 h-4" />
                   Senha
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 border border-gray-500 shadow-inner focus:outline-none focus:border-[#0055EA] text-sm bg-white"
+                />
               </div>
 
-              {/* Erro */}
               {error && (
-                <div className="bg-red-50 border-2 border-red-300 rounded-lg p-3">
-                  <p className="text-red-700 text-sm font-medium">{error}</p>
+                <div className="bg-[#FFD4D4] border border-[#FF8C8C] text-[#D80000] px-4 py-3 rounded text-xs">
+                  {error}
                 </div>
               )}
 
-              {/* Lembrar-me */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="remember"
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="remember" className="ml-2 text-sm text-gray-700">
-                    Lembrar-me
-                  </label>
-                </div>
-                <a href="#" className="text-sm text-blue-600 hover:underline font-medium">
-                  Esqueceu a senha?
-                </a>
-              </div>
+             
 
-              {/* Botão */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-b from-white to-[#D0E8FF] border border-[#003C8C] rounded text-[#003C8C] font-semibold shadow-xp-button hover:from-white hover:to-[#B8DAFF] hover:shadow-xp-button-hover active:from-[#B8DAFF] active:to-white active:shadow-xp-button-active transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-[#003C8C] border-t-transparent rounded-full animate-spin" />
-                    Entrando...
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="w-5 h-5" />
-                    Entrar
-                  </>
-                )}
-              </button>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 py-2 bg-gradient-to-b from-[#F6F6F6] to-[#E3E3E3] border border-[#003C74] rounded-sm font-bold text-black shadow-sm hover:bg-white disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? "Entrando..." : "Entrar"}
+                </button>
+              </div>
             </form>
 
-            {/* Link para registro */}
-            <div className="mt-6 text-center pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600">
+            <div className="pt-4 border-t border-gray-400 text-center">
+              <p className="text-xs text-gray-700">
                 Não tem uma conta?{" "}
-                <Link to="/registro" className="text-blue-600 font-semibold hover:underline">
+                <Link to="/registro" className="text-[#003399] font-bold hover:underline">
                   Criar conta
                 </Link>
               </p>
             </div>
           </div>
         </div>
-
-        
       </div>
     </div>
   );

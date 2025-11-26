@@ -14,7 +14,7 @@ namespace src.Core.Models
 
         public string? Description { get; set; } 
         public UserStatus Status { get; set; }
-        public ICollection<Group> Groups { get; set; } = new List<Group>();
+        public ICollection<UserGroup> UserGroups { get; set; } = new List<UserGroup>();
     }
     
     public enum UserStatus

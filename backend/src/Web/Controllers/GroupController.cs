@@ -72,7 +72,7 @@ namespace src.web.Controllers
             }
         }
 
-        [HttpPost("{groupId}/members/{userId}")]
+        [HttpPost("{groupId}/add/{userId}")]
         public async Task<IActionResult> AddMember(int groupId, string userId)
         {
             try
@@ -94,7 +94,7 @@ namespace src.web.Controllers
             }
         }
 
-        [HttpDelete("{groupId}/members/{userId}")]
+        [HttpPost("{groupId}/remove/{userId}")]
         public async Task<IActionResult> RemoveMember(int groupId, string userId)
         {
             try
@@ -104,11 +104,69 @@ namespace src.web.Controllers
                     return Unauthorized();
 
                 var success = await _groupService.RemoveMemberAsync(groupId, userId, requesterId);
-                
+
                 if (success)
                     return Ok(new { message = "Membro removido com sucesso" });
-                
+
                 return BadRequest(new { error = "Não foi possível remover o membro" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+        [HttpGet("{groupId}/members")]
+        public async Task<IActionResult> ListMembers(int groupId)
+        {
+            var response = await _groupService.ListMembersGroupAsync(groupId);
+            return Ok(response);
+            
+        }
+
+        [HttpGet("{groupId}/admins")]
+        public async Task<IActionResult> ListAdmins(int groupId)
+        {
+            var response = await _groupService.ListGroupAdminsAsync(groupId);
+            return Ok(response);
+        }
+
+        [HttpPost("{groupId}/promote/{userId}")]
+        public async Task<IActionResult> PromoteToAdmin(int groupId, string userId)
+        {
+            try
+            {
+                var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (requesterId == null)
+                    return Unauthorized();
+
+                var success = await _groupService.PromoteToAdminAsync(groupId, userId, requesterId);
+
+                if (success)
+                    return Ok(new { message = "Membro promovido a admin com sucesso" });
+
+                return BadRequest(new { error = "Não foi possível promover o membro" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("{groupId}/demote/{userId}")]
+        public async Task<IActionResult> DemoteFromAdmin(int groupId, string userId)
+        {
+            try
+            {
+                var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (requesterId == null)
+                    return Unauthorized();
+
+                var success = await _groupService.DemoteFromAdminAsync(groupId, userId, requesterId);
+
+                if (success)
+                    return Ok(new { message = "Admin demovido com sucesso" });
+
+                return BadRequest(new { error = "Não foi possível demover o admin" });
             }
             catch (Exception ex)
             {
