@@ -7,7 +7,6 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-// Componente de ícone retrô
 const RetroIcon = ({ src, fallback: Fallback, className, title }: { src: string, fallback: any, className?: string, title?: string }) => {
   const [error, setError] = useState(false);
 
@@ -27,7 +26,6 @@ const RetroIcon = ({ src, fallback: Fallback, className, title }: { src: string,
   );
 };
 
-// URLs dos ícones Win98/XP
 const ICONS_URL = {
   MESSENGER: "https://win98icons.alexmeub.com/icons/png/msn2-4.png",
   PROFILE: "https://win98icons.alexmeub.com/icons/png/user-2.png",
@@ -58,7 +56,7 @@ export default function Layout({ children }: LayoutProps) {
         backgroundPosition: 'center',
       }
     : {
-        background: 'linear-gradient(135deg, #0078D4 0%, #00BCF2 50%, #7FBA00 100%)',
+        background: 'linear-gradient(135deg, #daffdbff 0%, #d0eeffff 100%)',
       };
 
   useEffect(() => {
@@ -90,26 +88,22 @@ export default function Layout({ children }: LayoutProps) {
       className="h-screen relative overflow-hidden font-tahoma"
       style={backgroundStyle}
     >
-      {/* Efeito de brilho no fundo (opcional - mais sutil) */}
       {!user?.backgroundPicture && (
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/10 to-transparent" />
         </div>
       )}
 
-      {/* Header estilo Windows XP */}
       <header
         className={`fixed top-0 left-0 right-0 z-20 transition-transform duration-300 ease-in-out
           ${isHeaderVisible ? "translate-y-0" : "-translate-y-full"}`}
       >
-        {/* Barra de título estilo XP */}
         <div 
           className="bg-gradient-to-r from-[#0058EE] via-[#3B8CF4] to-[#0058EE] px-2 py-1 flex items-center justify-between border-b border-[#0044AA]"
           style={{
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.3)'
           }}
         >
-          {/* Logo */}
           <Link to="/home" className="flex items-center gap-2 group">
             <div className="relative">
               <Icons.Messenger className="w-6 h-6" />
@@ -119,7 +113,6 @@ export default function Layout({ children }: LayoutProps) {
             </span>
           </Link>
 
-          {/* Botões de janela fake (decorativo) */}
           <div className="flex items-center gap-1">
             <button className="w-5 h-5 bg-gradient-to-b from-[#3B82F6] to-[#1D4ED8] border border-white/30 rounded-sm flex items-center justify-center text-white text-[10px] font-bold hover:brightness-110">
               _
@@ -133,7 +126,6 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
 
-        {/* Barra de navegação/menu */}
         <div 
           className="bg-[#ECE9D8] border-b-2 border-white px-2 py-1 flex items-center gap-1"
           style={{
@@ -163,14 +155,12 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      {/* Main Content */}
       <main ref={mainRef} className="relative z-10 h-full overflow-y-auto">
         <div className="container mx-auto px-4 py-6">
           {children}
         </div>
       </main>
 
-      {/* Botão para mostrar header quando escondido */}
       {!isHeaderVisible && (
         <button
           onClick={() => setIsHeaderVisible(true)}
@@ -186,14 +176,12 @@ export default function Layout({ children }: LayoutProps) {
         </button>
       )}
 
-      {/* Taskbar estilo XP (opcional - decorativo) */}
       <div 
         className="fixed bottom-0 left-0 right-0 h-8 bg-gradient-to-r from-[#245EDC] via-[#3F8CF3] to-[#245EDC] border-t-2 border-[#5CACEE] z-20 flex items-center px-2"
         style={{
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)'
         }}
       >
-        {/* Botão Iniciar fake */}
         <button 
           className="h-6 px-2 bg-gradient-to-b from-[#3C8E3C] to-[#2D6E2D] border border-[#2D5F2D] rounded-r-lg flex items-center gap-1 text-white text-xs font-bold shadow-md hover:brightness-110"
           style={{
@@ -204,7 +192,6 @@ export default function Layout({ children }: LayoutProps) {
           Iniciar
         </button>
 
-        {/* Área de tarefas */}
         <div className="flex-1 flex items-center gap-1 ml-2">
           <div 
             className="h-6 px-2 bg-gradient-to-b from-[#3D6EDB] to-[#2950A8] border border-[#1E3F7A] flex items-center gap-1 text-white text-[10px] min-w-[120px]"
@@ -217,7 +204,6 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
 
-        {/* System tray */}
         <div 
           className="h-full px-3 bg-gradient-to-b from-[#0F8AEE] to-[#0C64C4] border-l border-[#0A5099] flex items-center gap-2 text-white text-[10px]"
           style={{
@@ -235,7 +221,6 @@ export default function Layout({ children }: LayoutProps) {
   );
 }
 
-// Componente de botão de navegação estilo XP
 function NavButton({ 
   to, 
   icon, 

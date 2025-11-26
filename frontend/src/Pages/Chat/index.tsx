@@ -10,9 +10,8 @@ import { apiService } from "../../Shared/Services/api";
 import { signalRService } from "../../Shared/Services/signalr";
 import { convertStatusToString } from "../../Shared/Utils/mappers";
 import { useLocation } from "react-router-dom";
-import type { Contact, Message } from "../../Shared/types/chat";
+import type { Message } from "../../Shared/types/chat";
 
-// --- ÍCONES RETRÔ (EXATAMENTE COMO VOCÊ TINHA) ---
 const RetroIcon = ({ src, fallback: Fallback, className, title }: { src: string; fallback: any; className?: string; title?: string }) => {
   const [error, setError] = useState(false);
   if (error) return <Fallback className={className} title={title} />;
@@ -55,7 +54,7 @@ const Icons = {
 
 export function Chat() {
   const { user, isConnected } = useAuth();
-  const [contacts, setContacts] = useState<any[]>([]); // any pra não dar erro no TS
+  const [contacts, setContacts] = useState<any[]>([]);
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageText, setMessageText] = useState("");
@@ -70,7 +69,6 @@ export function Chat() {
     contact.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // <<< STATUS CORRIGIDO PERFEITAMENTE (USANDO isOnline + status) >>>
   const getRealStatus = (contact: any): "available" | "busy" | "away" | "offline" => {
     if (!contact.isOnline) return "offline";
     switch (contact.status) {
@@ -91,7 +89,6 @@ export function Chat() {
       default: return "Disponível";
     }
   };
-  // <<< FIM DA CORREÇÃO >>>
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -134,7 +131,7 @@ export function Chat() {
           description: u.description || "",
           status: convertStatusToString(u.status),
           avatar: u.profilePicture,
-          isOnline: u.isOnline, // <-- FUNCIONA PORQUE AQUI VOCÊ ADICIONA
+          isOnline: u.isOnline, 
         }));
       setContacts(mappedContacts);
     } catch (error) {
@@ -177,7 +174,6 @@ export function Chat() {
     }
   };
 
-  // SIGNALR
   useEffect(() => {
     if (!signalRService.isConnected()) return;
 
@@ -254,7 +250,6 @@ export function Chat() {
 
         <div className="grid lg:grid-cols-[320px_1fr] gap-4 h-full">
 
-          {/* SIDEBAR - DESIGN 100% SEU */}
           <div className="h-full overflow-hidden flex flex-col bg-white/85 backdrop-blur-md border border-white/50 rounded-lg shadow-glass">
             <div className="p-3 border-b border-gray-200 bg-gradient-to-b from-[#F6F9FC] to-[#EEF3FA] flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
@@ -331,7 +326,6 @@ export function Chat() {
             </div>
           </div>
 
-          {/* CHAT PRINCIPAL - DESIGN 100% SEU */}
           <div className="h-full overflow-hidden">
             <XPWindow
               title={selectedContact ? `${selectedContact.name} - Conversa` : "Conversas"}
@@ -339,29 +333,6 @@ export function Chat() {
             >
               {selectedContact ? (
                 <div className="flex flex-col h-full bg-white">
-                  <div className="flex items-center gap-3 p-3 bg-gradient-to-b from-[#F6F9FC] to-[#EEF3FA] border-b border-[#8BA1C5] flex-shrink-0">
-                    <div className="relative">
-                      <div className={`w-12 h-12 bg-gradient-to-br ${getGradient(selectedContact.name)} border-2 border-gray-400 flex items-center justify-center text-white font-bold overflow-hidden`}>
-                        {selectedContact.avatar ? (
-                          <img src={selectedContact.avatar} alt={selectedContact.name} className="w-full h-full object-cover" />
-                        ) : getInitials(selectedContact.name)}
-                      </div>
-                      <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5">
-                        <StatusIndicator status={getRealStatus(selectedContact)} />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h2 className="font-bold text-sm text-blue-900 truncate">{selectedContact.name}</h2>
-                      <p className="text-[10px] text-gray-600 truncate">
-                        {getStatusText(selectedContact)}
-                        {selectedContact.description && ` • ${selectedContact.description}`}
-                      </p>
-                    </div>
-                    <button className="p-1.5 hover:bg-white/50 rounded border border-transparent hover:border-gray-300 transition-all" title="Opções">
-                      <Icons.Settings className="w-5 h-5" />
-                    </button>
-                  </div>
-
                   <div ref={messagesContainerRef} className="flex-1 p-4 space-y-2 overflow-y-auto" style={{ backgroundImage: "linear-gradient(to bottom, #ffffff, #f0faff)" }}>
                     {messages.length === 0 && !isTyping ? (
                       <div className="flex flex-col items-center justify-center h-full text-center">
@@ -391,9 +362,6 @@ export function Chat() {
 
                   <form onSubmit={handleSendMessage} className="p-3 bg-[#EEF3FA] border-t border-[#8BA1C5] flex-shrink-0">
                     <div className="flex gap-2 items-start">
-                      <button type="button" className="h-14 px-2 flex flex-col items-center justify-center bg-gradient-to-b from-[#FCFCFC] to-[#DEE9F7] border border-[#8BA1C5] rounded hover:brightness-95 active:brightness-90" title="Emoticons">
-                        <Icons.Smile className="w-5 h-5" />
-                      </button>
                       <textarea
                         value={messageText}
                         onChange={handleInputChange}

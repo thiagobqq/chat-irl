@@ -290,7 +290,7 @@ export function EditProfile() {
 
                       <div className="space-y-1">
                       <label className="text-xs font-bold text-gray-800">
-                          Status Inicial:
+                          Status:
                       </label>
                       <select
                           value={status}
@@ -307,7 +307,7 @@ export function EditProfile() {
 
                   <div className="space-y-1 mt-4">
                       <label className="text-xs font-bold text-gray-800">
-                      Frase Pessoal (Bio):
+                      Bio:
                       </label>
                       <textarea
                       value={bio}
