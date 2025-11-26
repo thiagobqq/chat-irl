@@ -71,7 +71,7 @@ export function Login() {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-800 flex items-center gap-2">
                   <RetroIcon src={ICONS.MAIL} fallback={Mail} className="w-4 h-4" />
-                  Endereço de e-mail
+                  E-mail
                 </label>
                 <input
                   type="email"
@@ -103,13 +103,7 @@ export function Login() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between text-xs">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4" />
-                  <span>Lembrar-me</span>
-                </label>
-                <a href="#" className="text-[#003399] hover:underline">Esqueceu a senha?</a>
-              </div>
+             
 
               <div className="flex gap-3 pt-4">
                 <button
@@ -126,7 +120,7 @@ export function Login() {
               <p className="text-xs text-gray-700">
                 Não tem uma conta?{" "}
                 <Link to="/registro" className="text-[#003399] font-bold hover:underline">
-                  Criar conta gratuita
+                  Criar conta
                 </Link>
               </p>
             </div>

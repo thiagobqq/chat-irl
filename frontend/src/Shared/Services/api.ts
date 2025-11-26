@@ -120,6 +120,25 @@ class ApiService {
     return this.fetchWithAuth('/user/me');
   }
 
+  async deleteCurrentUser(): Promise<boolean | null> {
+    const token = this.getToken();
+    const response = await fetch(`${this.baseUrl}/api/user/me`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: `Erro: ${response.status}` }));
+      throw new Error(error.message || `Erro: ${response.status}`);
+    }
+
+    if (response.status === 204) return null;
+    return true;
+  }
+
   async getUserById(userId: string): Promise<User> {
     return this.fetchWithAuth(`/user/${userId}`);
   }

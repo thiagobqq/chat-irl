@@ -43,6 +43,27 @@ namespace src.Web.Controllers
             return Ok(user);
         }
 
+        [HttpDelete("me")]
+        public async Task<IActionResult> DeleteCurrentUser()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var result = await _userRepo.DeleteUser(userId);
+            if (result)
+            {
+                return Ok();
+            }
+            else
+            {
+                return StatusCode(500, "An error occurred while deleting the user.");
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(string id)
         {

@@ -12,5 +12,6 @@ namespace src.Core.Interfaces
         Task<bool> UpdateUser(string userId, UserDTO dto);
         Task<UserDTO?> GetUserById(string userId);
         Task<IEnumerable<UserDTO>> GetAllUsers();
+        Task<bool> DeleteUser(string userId);
     }
 }

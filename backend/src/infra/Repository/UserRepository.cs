@@ -68,8 +68,18 @@ namespace src.infra.Repository
             });
         }
 
+        public async Task<bool> DeleteUser(string userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
 
-        
+            if (user == null)
+            {
+                return false;
+            }
+
+            _context.Users.Remove(user);
+            return await _context.SaveChangesAsync() > 0;
+        }       
         
         
     }

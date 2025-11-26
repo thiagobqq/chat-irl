@@ -55,7 +55,7 @@ const Icons = {
 
 export function EditProfile() {
   const navigate = useNavigate();
-  const { user: currentUser, setUser, isConnected } = useAuth();
+  const { user: currentUser, setUser } = useAuth();
   
   const [displayName, setDisplayName] = useState("");
   const [status, setStatus] = useState<UserStatusString>("Available");
@@ -65,7 +65,6 @@ export function EditProfile() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   
-  // Estados dos modais
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false); // NOVO MODAL
@@ -142,19 +141,17 @@ export function EditProfile() {
     }
   };
 
-  // Apenas abre o modal
   const handleDeleteClick = () => {
     setShowDeleteModal(true);
   };
 
-  // Lógica real de deletar (chamada pelo modal)
   const confirmDeleteAccount = async () => {
     setIsLoading(true);
     const toastId = toast.loading("Excluindo conta...");
 
     try {
-        // await apiService.deleteAccount(); // Descomente quando tiver o endpoint
-        await handleLogout(); // Por enquanto apenas desloga
+        await apiService.deleteCurrentUser(); 
+        await handleLogout(); 
         toast.success("Conta excluída com sucesso.", { id: toastId });
     } catch (error: any) {
         toast.error(error.message || "Erro ao excluir conta.", { id: toastId });

@@ -68,7 +68,7 @@ export function Register() {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-800 flex items-center gap-2">
                   <RetroIcon src={ICONS.USER} fallback={User} className="w-4 h-4" />
-                  Nome completo
+                  Nome
                 </label>
                 <input
                   type="text"
@@ -118,7 +118,7 @@ export function Register() {
                 disabled={isLoading}
                 className="w-full py-2 bg-gradient-to-b from-[#F6F6F6] to-[#E3E3E3] border border-[#003C74] rounded-sm font-bold text-black shadow-sm hover:bg-white disabled:opacity-60"
               >
-                {isLoading ? "Criando conta..." : "Criar conta gratuita"}
+                {isLoading ? "Criando conta..." : "Criar conta"}
               </button>
             </form>
 
@@ -126,7 +126,7 @@ export function Register() {
               <p className="text-xs text-gray-700">
                 Já tem conta?{" "}
                 <Link to="/login" className="text-[#003399] font-bold hover:underline">
-                  Fazer logon
+                  Fazer login
                 </Link>
               </p>
             </div>
