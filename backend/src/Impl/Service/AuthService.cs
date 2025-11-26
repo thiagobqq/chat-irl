@@ -47,7 +47,7 @@ namespace src.Impl.Service
             };
         }
 
-        public async Task<bool> Register(UserManager<AppUser> userManager, SignInManager<AppUser> signinManager, RegisterDto request)
+        public async Task<bool> Register(UserManager<AppUser> userManager, RegisterDto request)
         {
             var user = await userManager.Users.FirstOrDefaultAsync(x => x.Email == request.Email!.ToLower());
             if (user != null)
@@ -62,8 +62,8 @@ namespace src.Impl.Service
             var result = await userManager.CreateAsync(newUser, request.Password!);
             if (!result.Succeeded)
             {
-                var errorMessages = string.Join("; ", result.Errors.Select(e => $"{e.Code}: {e.Description}"));
-                throw new Exception($"Failed to create user: {errorMessages}");
+                var errorMessages = string.Join("; ", result.Errors.Select(e => $"{e.Code}: {e.Description}"));                
+                return false;
             }
 
             await _dbContext.SaveChangesAsync();
