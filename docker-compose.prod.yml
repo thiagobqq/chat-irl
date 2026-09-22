@@ -8,9 +8,8 @@ services:
     networks:
       - default
       - dokploy-network
-   labels:
+    labels:
       - traefik.docker.network=dokploy-network
-
     depends_on:
       - backend
 
