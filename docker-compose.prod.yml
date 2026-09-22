@@ -5,6 +5,12 @@ services:
       dockerfile: Dockerfile
     expose:
       - "80"
+    networks:
+      - default
+      - dokploy-network
+   labels:
+      - traefik.docker.network=dokploy-network
+
     depends_on:
       - backend
 
